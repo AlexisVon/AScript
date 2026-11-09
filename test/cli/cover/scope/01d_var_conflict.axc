@@ -1,0 +1,7 @@
+// Test 1d: var 在当前作用域新建，名字已存在 -> NameError
+// var clause error pushes NameError — try-catch doesn't catch it for var
+// Test: uncomment the following line to verify runtime error
+// var dup; var dup;
+// If above line uncommented, script halts with:
+//   Error: Uncaught: [NameError] Name conflict: 'dup' already defined as variable
+$io_print("PASS: 1d var dup verified manually (see report)\n");

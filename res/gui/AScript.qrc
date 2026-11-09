@@ -1,0 +1,32 @@
+<RCC>
+    <qresource prefix="/">
+        <file alias="ui/theme.qss">theme.qss</file>
+        <file alias="ui/FiraCode.ttf">FiraCode.ttf</file>
+        <file alias="ui/icons/folder.svg">icons/folder.svg</file>
+        <file alias="ui/icons/bug.svg">icons/bug.svg</file>
+        <file alias="ui/icons/terminal.svg">icons/terminal.svg</file>
+        <file alias="ui/icons/chart.svg">icons/chart.svg</file>
+        <file alias="ui/icons/book.svg">icons/book.svg</file>
+        <file alias="ui/icons/gear.svg">icons/gear.svg</file>
+        <file alias="ui/icons/file.svg">icons/file.svg</file>
+        <file alias="ui/icons/file-plus.svg">icons/file-plus.svg</file>
+        <file alias="ui/icons/folder-open.svg">icons/folder-open.svg</file>
+        <file alias="ui/icons/clock.svg">icons/clock.svg</file>
+        <file alias="ui/icons/lock.svg">icons/lock.svg</file>
+        <file alias="ui/icons/close.svg">icons/close.svg</file>
+        <file alias="ui/icons/close-hover.svg">icons/close-hover.svg</file>
+        <file alias="ui/icons/check.svg">icons/check.svg</file>
+        <file alias="ui/icons/chevron-down.svg">icons/chevron-down.svg</file>
+        <file alias="ui/icons/chevron-up.svg">icons/chevron-up.svg</file>
+        <file alias="ui/icons/copy.svg">icons/copy.svg</file>
+        <file alias="ui/icons/trash.svg">icons/trash.svg</file>
+        <file alias="ui/icons/stop.svg">icons/stop.svg</file>
+        <file alias="ui/icons/pause.svg">icons/pause.svg</file>
+        <file alias="ui/icons/play.svg">icons/play.svg</file>
+        <file alias="ui/icons/step-over.svg">icons/step-over.svg</file>
+        <file alias="ui/icons/step-into.svg">icons/step-into.svg</file>
+        <file alias="ui/icons/step-out.svg">icons/step-out.svg</file>
+        <file alias="ui/icons/run-to-cursor.svg">icons/run-to-cursor.svg</file>
+        <file alias="ui/icons/skip-trap.svg">icons/skip-trap.svg</file>
+    </qresource>
+</RCC>

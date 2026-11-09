@@ -1,0 +1,5 @@
+// Test 1c: var a=1, b, c=3 — 混合
+var a = 1, b, c = 3;
+if (a == 1) { $io_print("PASS: 1c a=1\n"); } else { $io_print("FAIL\n"); }
+if (b == null) { $io_print("PASS: 1c b=null\n"); } else { $io_print("FAIL\n"); }
+if (c == 3) { $io_print("PASS: 1c c=3\n"); } else { $io_print("FAIL\n"); }

@@ -1,0 +1,149 @@
+{
+  "functions": {
+    "vec_size": [
+      {
+        "desc": "number of elements",
+        "param": [
+          {
+            "key": "vec",
+            "type": "vec",
+            "desc": "vec to inspect (direct reference, zero-copy)"
+          }
+        ],
+        "ret": {
+          "type": "int",
+          "desc": "element count"
+        }
+      }
+    ],
+    "vec_find": [
+      {
+        "desc": "first index of a value",
+        "param": [
+          {
+            "key": "vec",
+            "type": "vec",
+            "desc": "vec to inspect (direct reference, zero-copy)"
+          },
+          {
+            "key": "value",
+            "type": "any",
+            "desc": "value to find"
+          }
+        ],
+        "ret": {
+          "type": "int",
+          "desc": "index, or -1 if absent"
+        }
+      }
+    ],
+    "vec_has": [
+      {
+        "desc": "contains a value",
+        "param": [
+          {
+            "key": "vec",
+            "type": "vec",
+            "desc": "vec to inspect (direct reference, zero-copy)"
+          },
+          {
+            "key": "value",
+            "type": "any",
+            "desc": "value to check"
+          }
+        ],
+        "ret": {
+          "type": "bool",
+          "desc": "true if present"
+        }
+      }
+    ],
+    "vec_insert": [
+      {
+        "desc": "insert a value at position (in place)",
+        "param": [
+          {
+            "key": "vec",
+            "type": "vec",
+            "desc": "vec to mutate (direct reference, zero-copy)"
+          },
+          {
+            "key": "pos",
+            "type": "int",
+            "desc": "index, clamped to [0, size]"
+          },
+          {
+            "key": "value",
+            "type": "any",
+            "desc": "value to insert"
+          }
+        ]
+      }
+    ],
+    "vec_remove": [
+      {
+        "desc": "remove the element at position (in place)",
+        "param": [
+          {
+            "key": "vec",
+            "type": "vec",
+            "desc": "vec to mutate (direct reference, zero-copy)"
+          },
+          {
+            "key": "pos",
+            "type": "int",
+            "desc": "index; out of range = no-op"
+          }
+        ]
+      }
+    ],
+    "vec_sort": [
+      {
+        "desc": "sort in place (int/float/string)",
+        "param": [
+          {
+            "key": "vec",
+            "type": "vec",
+            "desc": "vec to mutate (direct reference, zero-copy)"
+          },
+          {
+            "key": "desc",
+            "type": "bool",
+            "optional": true,
+            "default": false,
+            "desc": "descending order"
+          }
+        ]
+      }
+    ],
+    "vec_reverse": [
+      {
+        "desc": "reverse in place",
+        "param": [
+          {
+            "key": "vec",
+            "type": "vec",
+            "desc": "vec to mutate (direct reference, zero-copy)"
+          }
+        ]
+      }
+    ],
+    "vec_merge": [
+      {
+        "desc": "append another vec/lst in place",
+        "param": [
+          {
+            "key": "vec",
+            "type": "vec",
+            "desc": "target vec (direct reference, zero-copy)"
+          },
+          {
+            "key": "other",
+            "type": "vec|lst",
+            "desc": "source container (direct reference); self-merge duplicates"
+          }
+        ]
+      }
+    ]
+  }
+}

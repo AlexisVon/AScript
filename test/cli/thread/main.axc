@@ -1,0 +1,26 @@
+// Thread test: A creates B thread, handshake via kv
+var b_src = "$kv_store(\"b.ready\", true); while (!$kv_has(\"a.greet\")) { $sys_sleep(10); }; var greet_val = $kv_load(\"a.greet\"); $kv_store(\"b.ack\", \"ack: \" + greet_val); while (!$kv_has(\"a.done\")) { $sys_sleep(10); }; $kv_store(\"b.bye\", \"bye from B\");";
+
+var h = $thd_create(b_src);
+$io_print("io: B thread created\n");
+
+while (!$kv_has("b.ready")) { $sys_sleep(10); }
+$io_print("io: B is ready\n");
+
+$kv_store("a.greet", "hello from A");
+$io_print("io: sent greeting\n");
+
+while (!$kv_has("b.ack")) { $sys_sleep(10); }
+var ack = $kv_load("b.ack");
+$io_print("io: got ack — %1\n", ack);
+
+$kv_store("a.done", true);
+$io_print("io: sent done signal\n");
+
+while (!$kv_has("b.bye")) { $sys_sleep(10); }
+var bye = $kv_load("b.bye");
+$io_print("io: B says — %1\n", bye);
+
+$thd_join(h);
+$io_print("io: B thread joined, done\n");
+delete h;

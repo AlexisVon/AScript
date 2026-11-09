@@ -1,0 +1,451 @@
+{
+  "functions": {
+    "imread": [
+      {
+        "desc": "read an image file",
+        "param": [
+          {"key": "path", "type": "string", "desc": "file path"},
+          {"key": "mode", "type": "string", "optional": true, "default": "color", "desc": "color | gray | unchanged"}
+        ],
+        "ret": {"type": "image", "desc": "decoded image"}
+      }
+    ],
+    "imwrite": [
+      {
+        "desc": "write an image file",
+        "param": [
+          {"key": "path", "type": "string", "desc": "file path"},
+          {"key": "img", "type": "image", "desc": "image to write"},
+          {"key": "params", "type": "map", "optional": true, "desc": "jpeg_quality / png_compression / webp_quality / tiff_compression"}
+        ],
+        "ret": {"type": "bool", "desc": "true on success"}
+      }
+    ],
+    "imdecode": [
+      {
+        "desc": "decode an image from bytes",
+        "param": [
+          {"key": "data", "type": "bytes", "desc": "encoded image data"},
+          {"key": "mode", "type": "string", "optional": true, "default": "color", "desc": "color | gray | unchanged"}
+        ],
+        "ret": {"type": "image", "desc": "decoded image"}
+      }
+    ],
+    "imencode": [
+      {
+        "desc": "encode an image to bytes",
+        "param": [
+          {"key": "img", "type": "image", "desc": "image to encode"},
+          {"key": "ext", "type": "string", "desc": "extension: png / jpg / webp / tif / bmp"},
+          {"key": "params", "type": "map", "optional": true, "desc": "jpeg_quality / png_compression / webp_quality / tiff_compression"}
+        ],
+        "ret": {"type": "bytes", "desc": "encoded image data"}
+      }
+    ],
+    "create": [
+      {
+        "desc": "create a blank image",
+        "param": [
+          {"key": "width", "type": "int", "desc": "pixels"},
+          {"key": "height", "type": "int", "desc": "pixels"},
+          {"key": "type", "type": "string", "desc": "8u / 8uc3 / 16sc1 / 32fc1 ..."},
+          {"key": "color", "type": "int", "optional": true, "desc": "0xRRGGBB fill"}
+        ],
+        "ret": {"type": "image", "desc": "new image"}
+      }
+    ],
+    "clone": [
+      {
+        "desc": "copy an image",
+        "param": [{"key": "img", "type": "image", "desc": "source image"}],
+        "ret": {"type": "image", "desc": "independent copy"}
+      }
+    ],
+    "info": [
+      {
+        "desc": "image geometry and type",
+        "param": [{"key": "img", "type": "image", "desc": "image"}],
+        "ret": {"type": "map", "desc": "width, height, channels, depth, mat_type"}
+      }
+    ],
+    "version": [
+      {
+        "desc": "embedded OpenCV version",
+        "param": [],
+        "ret": {"type": "string", "desc": "version string"}
+      }
+    ],
+    "resize": [
+      {
+        "desc": "resize an image",
+        "param": [
+          {"key": "img", "type": "image", "desc": "source image"},
+          {"key": "width", "type": "int", "desc": "target width"},
+          {"key": "height", "type": "int", "desc": "target height"},
+          {"key": "interp", "type": "string", "optional": true, "default": "linear", "desc": "nearest | linear | cubic | area | lanczos"}
+        ],
+        "ret": {"type": "image", "desc": "resized image"}
+      }
+    ],
+    "crop": [
+      {
+        "desc": "crop a rectangle",
+        "param": [
+          {"key": "img", "type": "image", "desc": "source image"},
+          {"key": "x", "type": "int", "desc": "left"},
+          {"key": "y", "type": "int", "desc": "top"},
+          {"key": "width", "type": "int", "desc": "width"},
+          {"key": "height", "type": "int", "desc": "height"}
+        ],
+        "ret": {"type": "image", "desc": "copied crop"}
+      }
+    ],
+    "rotate": [
+      {
+        "desc": "rotate by a right angle",
+        "param": [
+          {"key": "img", "type": "image", "desc": "source image"},
+          {"key": "angle", "type": "int", "desc": "90 / 180 / 270"}
+        ],
+        "ret": {"type": "image", "desc": "rotated image"}
+      }
+    ],
+    "flip": [
+      {
+        "desc": "flip an image",
+        "param": [
+          {"key": "img", "type": "image", "desc": "source image"},
+          {"key": "axis", "type": "string|int", "desc": "x | y | both, or 0 / 1 / -1"}
+        ],
+        "ret": {"type": "image", "desc": "flipped image"}
+      }
+    ],
+    "transpose": [
+      {
+        "desc": "transpose rows and columns",
+        "param": [{"key": "img", "type": "image", "desc": "source image"}],
+        "ret": {"type": "image", "desc": "transposed image"}
+      }
+    ],
+    "cvt_color": [
+      {
+        "desc": "convert the color space",
+        "param": [
+          {"key": "img", "type": "image", "desc": "source image"},
+          {"key": "code", "type": "string", "desc": "bgr2gray / bgr2hsv / bgr2rgb ..."}
+        ],
+        "ret": {"type": "image", "desc": "converted image"}
+      }
+    ],
+    "threshold": [
+      {
+        "desc": "apply a fixed or automatic threshold",
+        "param": [
+          {"key": "img", "type": "image", "desc": "source image"},
+          {"key": "thresh", "type": "float", "desc": "threshold"},
+          {"key": "maxval", "type": "float", "desc": "value written on the upper side"},
+          {"key": "type", "type": "string", "optional": true, "default": "binary", "desc": "binary / binary_inv / trunc / tozero / otsu / triangle ..."}
+        ],
+        "ret": {"type": "image", "desc": "thresholded image"}
+      }
+    ],
+    "split": [
+      {
+        "desc": "split channels",
+        "param": [{"key": "img", "type": "image", "desc": "source image"}],
+        "ret": {"type": "vec<image>", "desc": "one image per channel"}
+      }
+    ],
+    "merge": [
+      {
+        "desc": "merge channels",
+        "param": [{"key": "images", "type": "vec<image>", "desc": "single-channel images"}],
+        "ret": {"type": "image", "desc": "merged image"}
+      }
+    ],
+    "convert": [
+      {
+        "desc": "convert depth with scale and offset",
+        "param": [
+          {"key": "img", "type": "image", "desc": "source image"},
+          {"key": "type", "type": "string", "desc": "depth only (8u / 16s / 32f ...); channels must match the input"},
+          {"key": "scale", "type": "float", "optional": true, "default": 1, "desc": "multiplier"},
+          {"key": "offset", "type": "float", "optional": true, "default": 0, "desc": "added after scaling"}
+        ],
+        "ret": {"type": "image", "desc": "converted image"}
+      }
+    ],
+    "blur": [
+      {
+        "desc": "box blur",
+        "param": [
+          {"key": "img", "type": "image", "desc": "source image"},
+          {"key": "ksize", "type": "int", "desc": "kernel size"}
+        ],
+        "ret": {"type": "image", "desc": "blurred image"}
+      }
+    ],
+    "gaussian_blur": [
+      {
+        "desc": "Gaussian blur",
+        "param": [
+          {"key": "img", "type": "image", "desc": "source image"},
+          {"key": "ksize", "type": "int", "desc": "odd kernel size, or 0 with sigma"},
+          {"key": "sigma", "type": "float", "optional": true, "default": 0, "desc": "Gaussian sigma"}
+        ],
+        "ret": {"type": "image", "desc": "blurred image"}
+      }
+    ],
+    "median_blur": [
+      {
+        "desc": "median blur",
+        "param": [
+          {"key": "img", "type": "image", "desc": "source image"},
+          {"key": "ksize", "type": "int", "desc": "odd kernel size >= 3"}
+        ],
+        "ret": {"type": "image", "desc": "blurred image"}
+      }
+    ],
+    "bilateral": [
+      {
+        "desc": "edge-preserving bilateral filter",
+        "param": [
+          {"key": "img", "type": "image", "desc": "source image"},
+          {"key": "d", "type": "int", "desc": "neighborhood diameter"},
+          {"key": "sigma_color", "type": "float", "desc": "color sigma"},
+          {"key": "sigma_space", "type": "float", "desc": "space sigma"}
+        ],
+        "ret": {"type": "image", "desc": "filtered image"}
+      }
+    ],
+    "sobel": [
+      {
+        "desc": "Sobel derivative",
+        "param": [
+          {"key": "img", "type": "image", "desc": "source image"},
+          {"key": "dx", "type": "int", "desc": "x derivative order"},
+          {"key": "dy", "type": "int", "desc": "y derivative order"},
+          {"key": "ksize", "type": "int", "optional": true, "default": 3, "desc": "1 / 3 / 5 / 7"}
+        ],
+        "ret": {"type": "image", "desc": "16s derivative image"}
+      }
+    ],
+    "laplacian": [
+      {
+        "desc": "Laplacian derivative",
+        "param": [
+          {"key": "img", "type": "image", "desc": "source image"},
+          {"key": "ksize", "type": "int", "optional": true, "default": 1, "desc": "1 / 3 / 5 / 7"}
+        ],
+        "ret": {"type": "image", "desc": "16s derivative image"}
+      }
+    ],
+    "canny": [
+      {
+        "desc": "Canny edge detector",
+        "param": [
+          {"key": "img", "type": "image", "desc": "8-bit single-channel image"},
+          {"key": "low", "type": "float", "desc": "low hysteresis threshold"},
+          {"key": "high", "type": "float", "desc": "high hysteresis threshold"},
+          {"key": "aperture", "type": "int", "optional": true, "default": 3, "desc": "aperture size"}
+        ],
+        "ret": {"type": "image", "desc": "8u edge map"}
+      }
+    ],
+    "erode": [
+      {
+        "desc": "morphological erosion",
+        "param": [
+          {"key": "img", "type": "image", "desc": "source image"},
+          {"key": "ksize", "type": "int", "desc": "square kernel size"},
+          {"key": "iterations", "type": "int", "optional": true, "default": 1, "desc": "passes"}
+        ],
+        "ret": {"type": "image", "desc": "eroded image"}
+      }
+    ],
+    "dilate": [
+      {
+        "desc": "morphological dilation",
+        "param": [
+          {"key": "img", "type": "image", "desc": "source image"},
+          {"key": "ksize", "type": "int", "desc": "square kernel size"},
+          {"key": "iterations", "type": "int", "optional": true, "default": 1, "desc": "passes"}
+        ],
+        "ret": {"type": "image", "desc": "dilated image"}
+      }
+    ],
+    "morphology": [
+      {
+        "desc": "compound morphology",
+        "param": [
+          {"key": "img", "type": "image", "desc": "source image"},
+          {"key": "op", "type": "string", "desc": "open / close / gradient / tophat / blackhat"},
+          {"key": "ksize", "type": "int", "desc": "square kernel size"},
+          {"key": "iterations", "type": "int", "optional": true, "default": 1, "desc": "passes"}
+        ],
+        "ret": {"type": "image", "desc": "morphed image"}
+      }
+    ],
+    "line": [
+      {
+        "desc": "draw a line in place",
+        "param": [
+          {"key": "img", "type": "image", "desc": "target image"},
+          {"key": "x1", "type": "int", "desc": "start x"},
+          {"key": "y1", "type": "int", "desc": "start y"},
+          {"key": "x2", "type": "int", "desc": "end x"},
+          {"key": "y2", "type": "int", "desc": "end y"},
+          {"key": "color", "type": "int", "desc": "0xRRGGBB"},
+          {"key": "thickness", "type": "int", "optional": true, "default": 1, "desc": "line width"},
+          {"key": "line_type", "type": "int", "optional": true, "default": 8, "desc": "4 / 8 / 16"}
+        ],
+        "ret": {"type": "image", "desc": "the same image"}
+      }
+    ],
+    "rect": [
+      {
+        "desc": "draw a rectangle in place",
+        "param": [
+          {"key": "img", "type": "image", "desc": "target image"},
+          {"key": "x", "type": "int", "desc": "left"},
+          {"key": "y", "type": "int", "desc": "top"},
+          {"key": "width", "type": "int", "desc": "width"},
+          {"key": "height", "type": "int", "desc": "height"},
+          {"key": "color", "type": "int", "desc": "0xRRGGBB"},
+          {"key": "thickness", "type": "int", "optional": true, "default": 1, "desc": "negative fills"},
+          {"key": "line_type", "type": "int", "optional": true, "default": 8, "desc": "4 / 8 / 16"}
+        ],
+        "ret": {"type": "image", "desc": "the same image"}
+      }
+    ],
+    "circle": [
+      {
+        "desc": "draw a circle in place",
+        "param": [
+          {"key": "img", "type": "image", "desc": "target image"},
+          {"key": "cx", "type": "int", "desc": "center x"},
+          {"key": "cy", "type": "int", "desc": "center y"},
+          {"key": "radius", "type": "int", "desc": "radius"},
+          {"key": "color", "type": "int", "desc": "0xRRGGBB"},
+          {"key": "thickness", "type": "int", "optional": true, "default": 1, "desc": "negative fills"},
+          {"key": "line_type", "type": "int", "optional": true, "default": 8, "desc": "4 / 8 / 16"}
+        ],
+        "ret": {"type": "image", "desc": "the same image"}
+      }
+    ],
+    "ellipse": [
+      {
+        "desc": "draw an ellipse arc in place",
+        "param": [
+          {"key": "img", "type": "image", "desc": "target image"},
+          {"key": "cx", "type": "int", "desc": "center x"},
+          {"key": "cy", "type": "int", "desc": "center y"},
+          {"key": "ax", "type": "int", "desc": "x semi-axis"},
+          {"key": "ay", "type": "int", "desc": "y semi-axis"},
+          {"key": "angle", "type": "float", "desc": "rotation in degrees"},
+          {"key": "start", "type": "float", "desc": "start angle"},
+          {"key": "end", "type": "float", "desc": "end angle"},
+          {"key": "color", "type": "int", "desc": "0xRRGGBB"},
+          {"key": "thickness", "type": "int", "optional": true, "default": 1, "desc": "negative fills"},
+          {"key": "line_type", "type": "int", "optional": true, "default": 8, "desc": "4 / 8 / 16"}
+        ],
+        "ret": {"type": "image", "desc": "the same image"}
+      }
+    ],
+    "text": [
+      {
+        "desc": "draw ASCII text in place",
+        "param": [
+          {"key": "img", "type": "image", "desc": "target image"},
+          {"key": "text", "type": "string", "desc": "ASCII text"},
+          {"key": "x", "type": "int", "desc": "origin x"},
+          {"key": "y", "type": "int", "desc": "baseline y"},
+          {"key": "scale", "type": "float", "desc": "font scale"},
+          {"key": "color", "type": "int", "desc": "0xRRGGBB"},
+          {"key": "thickness", "type": "int", "optional": true, "default": 1, "desc": "stroke width"},
+          {"key": "font", "type": "string", "optional": true, "default": "simplex", "desc": "simplex / plain / duplex / complex / triplex / complex_small / script_simplex / script_complex"},
+          {"key": "line_type", "type": "int", "optional": true, "default": 8, "desc": "4 / 8 / 16"}
+        ],
+        "ret": {"type": "image", "desc": "the same image"}
+      }
+    ],
+    "add": [
+      {
+        "desc": "saturating element-wise add",
+        "param": [
+          {"key": "a", "type": "image", "desc": "first image"},
+          {"key": "b", "type": "image", "desc": "second image"}
+        ],
+        "ret": {"type": "image", "desc": "sum image"}
+      }
+    ],
+    "subtract": [
+      {
+        "desc": "saturating element-wise subtract",
+        "param": [
+          {"key": "a", "type": "image", "desc": "first image"},
+          {"key": "b", "type": "image", "desc": "second image"}
+        ],
+        "ret": {"type": "image", "desc": "difference image"}
+      }
+    ],
+    "absdiff": [
+      {
+        "desc": "absolute element-wise difference",
+        "param": [
+          {"key": "a", "type": "image", "desc": "first image"},
+          {"key": "b", "type": "image", "desc": "second image"}
+        ],
+        "ret": {"type": "image", "desc": "difference image"}
+      }
+    ],
+    "bitwise_and": [
+      {
+        "desc": "element-wise bitwise and",
+        "param": [
+          {"key": "a", "type": "image", "desc": "first image"},
+          {"key": "b", "type": "image", "desc": "second image"}
+        ],
+        "ret": {"type": "image", "desc": "result image"}
+      }
+    ],
+    "bitwise_or": [
+      {
+        "desc": "element-wise bitwise or",
+        "param": [
+          {"key": "a", "type": "image", "desc": "first image"},
+          {"key": "b", "type": "image", "desc": "second image"}
+        ],
+        "ret": {"type": "image", "desc": "result image"}
+      }
+    ],
+    "bitwise_xor": [
+      {
+        "desc": "element-wise bitwise xor",
+        "param": [
+          {"key": "a", "type": "image", "desc": "first image"},
+          {"key": "b", "type": "image", "desc": "second image"}
+        ],
+        "ret": {"type": "image", "desc": "result image"}
+      }
+    ],
+    "bitwise_not": [
+      {
+        "desc": "element-wise bitwise not",
+        "param": [{"key": "img", "type": "image", "desc": "source image"}],
+        "ret": {"type": "image", "desc": "result image"}
+      }
+    ],
+    "blend": [
+      {
+        "desc": "weighted blend of two images",
+        "param": [
+          {"key": "a", "type": "image", "desc": "first image"},
+          {"key": "b", "type": "image", "desc": "second image"},
+          {"key": "alpha", "type": "float", "desc": "weight of a, 0..1"}
+        ],
+        "ret": {"type": "image", "desc": "blended image"}
+      }
+    ]
+  }
+}

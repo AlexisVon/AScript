@@ -1,0 +1,7 @@
+// Test 7d: map key索引
+var m; m = map{"k1": "v1", "k2": 42};
+if (m["k1"] == "v1") { $io_print("PASS: 7d map[\"k1\"] read\n"); } else { $io_print("FAIL\n"); }
+m["k2"] = 99;
+if (m["k2"] == 99) { $io_print("PASS: 7d map[\"k2\"] write\n"); } else { $io_print("FAIL\n"); }
+m["k3"] = "new";
+if (m["k3"] == "new") { $io_print("PASS: 7d map insert new key\n"); } else { $io_print("FAIL\n"); }

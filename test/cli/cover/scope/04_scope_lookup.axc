@@ -1,0 +1,11 @@
+// Test 4: 作用域查找 当前帧->父帧->entity持久m_map
+var g; g = "global";
+{
+    var p; p = "parent";
+    {
+        var c; c = "child";
+        if (g == "global") { $io_print("PASS: 4 child reads global\n"); } else { $io_print("FAIL\n"); }
+        if (p == "parent") { $io_print("PASS: 4 child reads parent\n"); } else { $io_print("FAIL\n"); }
+        if (c == "child") { $io_print("PASS: 4 child reads own\n"); } else { $io_print("FAIL\n"); }
+    }
+}

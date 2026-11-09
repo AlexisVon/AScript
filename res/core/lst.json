@@ -1,0 +1,118 @@
+{
+  "functions": {
+    "lst_size": [
+      {
+        "desc": "number of elements",
+        "param": [
+          {
+            "key": "lst",
+            "type": "lst",
+            "desc": "lst to inspect (direct reference, zero-copy)"
+          }
+        ],
+        "ret": {
+          "type": "int",
+          "desc": "element count"
+        }
+      }
+    ],
+    "lst_find": [
+      {
+        "desc": "first index of a value",
+        "param": [
+          {
+            "key": "lst",
+            "type": "lst",
+            "desc": "lst to inspect (direct reference, zero-copy)"
+          },
+          {
+            "key": "value",
+            "type": "any",
+            "desc": "value to find"
+          }
+        ],
+        "ret": {
+          "type": "int",
+          "desc": "index, or -1 if absent"
+        }
+      }
+    ],
+    "lst_has": [
+      {
+        "desc": "contains a value",
+        "param": [
+          {
+            "key": "lst",
+            "type": "lst",
+            "desc": "lst to inspect (direct reference, zero-copy)"
+          },
+          {
+            "key": "value",
+            "type": "any",
+            "desc": "value to check"
+          }
+        ],
+        "ret": {
+          "type": "bool",
+          "desc": "true if present"
+        }
+      }
+    ],
+    "lst_insert": [
+      {
+        "desc": "insert a value at position (in place)",
+        "param": [
+          {
+            "key": "lst",
+            "type": "lst",
+            "desc": "lst to mutate (direct reference, zero-copy)"
+          },
+          {
+            "key": "pos",
+            "type": "int",
+            "desc": "index, clamped to [0, size]"
+          },
+          {
+            "key": "value",
+            "type": "any",
+            "desc": "value to insert"
+          }
+        ]
+      }
+    ],
+    "lst_remove": [
+      {
+        "desc": "remove the element at position (in place)",
+        "param": [
+          {
+            "key": "lst",
+            "type": "lst",
+            "desc": "lst to mutate (direct reference, zero-copy)"
+          },
+          {
+            "key": "pos",
+            "type": "int",
+            "desc": "index; out of range = no-op"
+          }
+        ]
+      }
+    ],
+    "lst_merge": [
+      {
+        "desc": "append another lst/vec in place",
+        "param": [
+          {
+            "key": "lst",
+            "type": "lst",
+            "desc": "target lst (direct reference, zero-copy)"
+          },
+          {
+            "key": "other",
+            "type": "lst|vec",
+            "desc": "source container (direct reference); self-merge duplicates"
+          }
+        ]
+      }
+    ]
+  }
+}

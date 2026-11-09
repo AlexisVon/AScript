@@ -1,0 +1,13 @@
+// B — respond to A via kv, key names come from params
+// ready, greet, ack, done, bye are root variables set by A's params map
+
+$kv_store(ready, true);
+
+while (!$kv_has(greet)) { $sys_sleep(10); };
+var greet_val = $kv_load(greet);
+
+$kv_store(ack, "ack: " + greet_val);
+
+while (!$kv_has(done)) { $sys_sleep(10); };
+
+$kv_store(bye, "bye from B");

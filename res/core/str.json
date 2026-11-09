@@ -1,0 +1,308 @@
+{
+  "functions": {
+    "str_find": [
+      {
+        "desc": "find first occurrence of a substring",
+        "param": [
+          {
+            "key": "str",
+            "type": "string",
+            "desc": "source string"
+          },
+          {
+            "key": "tag",
+            "type": "string",
+            "desc": "substring to find"
+          },
+          {
+            "key": "from",
+            "type": "int",
+            "optional": true,
+            "default": 0,
+            "desc": "start position"
+          }
+        ],
+        "ret": {
+          "type": "int",
+          "desc": "index, or -1 if not found"
+        }
+      }
+    ],
+    "str_rfind": [
+      {
+        "desc": "find last occurrence of a substring",
+        "param": [
+          {
+            "key": "str",
+            "type": "string",
+            "desc": "source string"
+          },
+          {
+            "key": "tag",
+            "type": "string",
+            "desc": "substring to find"
+          }
+        ],
+        "ret": {
+          "type": "int",
+          "desc": "index, or -1 if not found"
+        }
+      }
+    ],
+    "str_left": [
+      {
+        "desc": "first n characters",
+        "param": [
+          {
+            "key": "str",
+            "type": "string",
+            "desc": "source string"
+          },
+          {
+            "key": "n",
+            "type": "int",
+            "desc": "number of characters"
+          }
+        ],
+        "ret": {
+          "type": "string",
+          "desc": "left substring"
+        }
+      }
+    ],
+    "str_right": [
+      {
+        "desc": "last n characters",
+        "param": [
+          {
+            "key": "str",
+            "type": "string",
+            "desc": "source string"
+          },
+          {
+            "key": "n",
+            "type": "int",
+            "desc": "number of characters"
+          }
+        ],
+        "ret": {
+          "type": "string",
+          "desc": "right substring"
+        }
+      }
+    ],
+    "str_mid": [
+      {
+        "desc": "substring from position",
+        "param": [
+          {
+            "key": "str",
+            "type": "string",
+            "desc": "source string"
+          },
+          {
+            "key": "pos",
+            "type": "int",
+            "desc": "start position"
+          },
+          {
+            "key": "len",
+            "type": "int",
+            "optional": true,
+            "desc": "length; omitted = to end"
+          }
+        ],
+        "ret": {
+          "type": "string",
+          "desc": "substring"
+        }
+      }
+    ],
+    "str_split": [
+      {
+        "desc": "split string by delimiter",
+        "param": [
+          {
+            "key": "str",
+            "type": "string",
+            "desc": "source string"
+          },
+          {
+            "key": "delim",
+            "type": "string",
+            "desc": "delimiter"
+          }
+        ],
+        "ret": {
+          "type": "vec",
+          "desc": "parts"
+        }
+      }
+    ],
+    "str_join": [
+      {
+        "desc": "join string vec/lst with delimiter",
+        "param": [
+          {
+            "key": "parts",
+            "type": "vec|lst",
+            "desc": "string elements"
+          },
+          {
+            "key": "delim",
+            "type": "string",
+            "desc": "delimiter"
+          }
+        ],
+        "ret": {
+          "type": "string",
+          "desc": "joined string"
+        }
+      }
+    ],
+    "str_replace": [
+      {
+        "desc": "replace all occurrences of a substring",
+        "param": [
+          {
+            "key": "str",
+            "type": "string",
+            "desc": "source string"
+          },
+          {
+            "key": "old",
+            "type": "string",
+            "desc": "substring to replace"
+          },
+          {
+            "key": "new",
+            "type": "string",
+            "desc": "replacement"
+          }
+        ],
+        "ret": {
+          "type": "string",
+          "desc": "replaced string"
+        }
+      }
+    ],
+    "str_upper": [
+      {
+        "desc": "convert to uppercase",
+        "param": [
+          {
+            "key": "str",
+            "type": "string",
+            "desc": "source string"
+          }
+        ],
+        "ret": {
+          "type": "string",
+          "desc": "uppercase string"
+        }
+      }
+    ],
+    "str_lower": [
+      {
+        "desc": "convert to lowercase",
+        "param": [
+          {
+            "key": "str",
+            "type": "string",
+            "desc": "source string"
+          }
+        ],
+        "ret": {
+          "type": "string",
+          "desc": "lowercase string"
+        }
+      }
+    ],
+    "str_trim": [
+      {
+        "desc": "trim characters from both ends",
+        "param": [
+          {
+            "key": "str",
+            "type": "string",
+            "desc": "source string"
+          },
+          {
+            "key": "chars",
+            "type": "string",
+            "optional": true,
+            "default": " \t\n\r",
+            "desc": "characters to trim"
+          }
+        ],
+        "ret": {
+          "type": "string",
+          "desc": "trimmed string"
+        }
+      }
+    ],
+    "str_starts": [
+      {
+        "desc": "check if string starts with prefix",
+        "param": [
+          {
+            "key": "str",
+            "type": "string",
+            "desc": "source string"
+          },
+          {
+            "key": "prefix",
+            "type": "string",
+            "desc": "prefix to check"
+          }
+        ],
+        "ret": {
+          "type": "bool",
+          "desc": "true if starts with prefix"
+        }
+      }
+    ],
+    "str_ends": [
+      {
+        "desc": "check if string ends with suffix",
+        "param": [
+          {
+            "key": "str",
+            "type": "string",
+            "desc": "source string"
+          },
+          {
+            "key": "suffix",
+            "type": "string",
+            "desc": "suffix to check"
+          }
+        ],
+        "ret": {
+          "type": "bool",
+          "desc": "true if ends with suffix"
+        }
+      }
+    ],
+    "str_contains": [
+      {
+        "desc": "check if string contains substring",
+        "param": [
+          {
+            "key": "str",
+            "type": "string",
+            "desc": "source string"
+          },
+          {
+            "key": "sub",
+            "type": "string",
+            "desc": "substring to check"
+          }
+        ],
+        "ret": {
+          "type": "bool",
+          "desc": "true if contains"
+        }
+      }
+    ]
+  }
+}

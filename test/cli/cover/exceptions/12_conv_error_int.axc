@@ -1,0 +1,7 @@
+// Test: ConvError - int("abc")
+try {
+    var x = int("abc");
+} catch (e) {
+    $io_print("what: %1\n", e.what);
+    $io_print("info: %1\n", e.info);
+}

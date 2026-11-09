@@ -1,0 +1,7 @@
+// Test: NavError - .. beyond entity tree depth
+try {
+    $io_print(..x);
+} catch (e) {
+    $io_print("what: %1\n", e.what);
+    $io_print("info: %1\n", e.info);
+}

@@ -1,0 +1,5 @@
+// Test 2a: x = 1 沿作用域链查找 -> 找到则赋值
+var x; x = 1;
+{ x = 99; }
+if (x == 99) { $io_print("PASS: 2a no-var assign modifies outer var\n"); }
+else { $io_print("FAIL\n"); }

@@ -1,0 +1,66 @@
+{
+  "functions": {
+    "thd_create": [
+      {
+        "desc": "create a thread running script source with a new engine; the child is not debugged unless multi-thread debugging is on, so its trap() does not pause the session otherwise",
+        "param": [
+          {
+            "key": "source",
+            "type": "string",
+            "desc": "script source code"
+          },
+          {
+            "key": "params",
+            "type": "map",
+            "optional": true,
+            "default": "{}",
+            "desc": "initial variables for child engine root scope"
+          },
+          {
+            "key": "path",
+            "type": "string",
+            "optional": true,
+            "default": "\"\"",
+            "desc": "home directory for import resolution"
+          }
+        ],
+        "ret": {
+          "type": "anyptr",
+          "desc": "thread handle; copies share the same thread (joined and destroyed when the last copy drops)"
+        }
+      }
+    ],
+    "thd_join": [
+      {
+        "desc": "block until thread completes, return child engine exec result",
+        "param": [
+          {
+            "key": "handle",
+            "type": "anyptr",
+            "desc": "thread handle from thd_create"
+          }
+        ],
+        "ret": {
+          "type": "variant",
+          "desc": "child engine exec result"
+        }
+      }
+    ],
+    "thd_running": [
+      {
+        "desc": "check if thread is still running",
+        "param": [
+          {
+            "key": "handle",
+            "type": "anyptr",
+            "desc": "thread handle from thd_create"
+          }
+        ],
+        "ret": {
+          "type": "bool",
+          "desc": "true if running"
+        }
+      }
+    ]
+  }
+}

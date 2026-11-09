@@ -1,0 +1,49 @@
+{
+  "functions": {
+    "sys_datetime": [
+      {
+        "desc": "current local time as a numeric map",
+        "param": [],
+        "ret": {
+          "type": "map",
+          "desc": "{year, month, day, h, m, s, ms, us}"
+        }
+      }
+    ],
+    "sys_sleep": [
+      {
+        "desc": "sleep for a duration",
+        "param": [
+          {
+            "key": "ms",
+            "type": "int",
+            "desc": "milliseconds"
+          }
+        ]
+      }
+    ],
+    "sys_exec": [
+      {
+        "desc": "run an external command with timeout",
+        "param": [
+          {
+            "key": "cmd",
+            "type": "string",
+            "desc": "command line to execute"
+          },
+          {
+            "key": "timeout",
+            "type": "int",
+            "optional": true,
+            "default": 5000,
+            "desc": "ms"
+          }
+        ],
+        "ret": {
+          "type": "map",
+          "desc": "{output, excode, success}"
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,141 @@
+{
+  "functions": {
+    "open": [
+      {
+        "desc": "open a TCP/UDP transport handle; data and events arrive as deliveries serviced at yield()",
+        "param": [
+          {
+            "key": "type",
+            "type": "string",
+            "desc": "tcp_server / tcp_client / udp_trans"
+          },
+          {
+            "key": "addr",
+            "type": "string",
+            "desc": "\"a.b.c.d:port\" to bind (server/udp) or connect to (client)"
+          },
+          {
+            "key": "opts",
+            "type": "map",
+            "optional": true,
+            "desc": "window (TCP in-flight deliveries per connection, default 1), expiry (UDP queue wait in ms, default 100), max_inflight (UDP outstanding deliveries, default 64)"
+          }
+        ],
+        "ret": {
+          "type": "handle",
+          "desc": "net handle; an open failure throws RuntimeError"
+        }
+      }
+    ],
+    "on_recv": [
+      {
+        "desc": "register the receive handler; each delivery calls handler(addr, data) at a yield() point",
+        "param": [
+          {
+            "key": "handle",
+            "type": "handle",
+            "desc": "handle from net.open"
+          },
+          {
+            "key": "handler",
+            "type": "string",
+            "desc": "root-scope def name, resolved when the delivery is serviced; def handler(addr, data), data is bytes"
+          }
+        ]
+      }
+    ],
+    "on_event": [
+      {
+        "desc": "register the connection event handler; handler(addr, connected), true = connected, false = disconnected",
+        "param": [
+          {
+            "key": "handle",
+            "type": "handle",
+            "desc": "handle from net.open"
+          },
+          {
+            "key": "handler",
+            "type": "string",
+            "desc": "root-scope def name; tcp_server reports per-peer connect/disconnect, tcp_client its connection drop, udp_trans nothing"
+          }
+        ]
+      }
+    ],
+    "send": [
+      {
+        "desc": "send bytes to one peer, or to every peer when addr is omitted",
+        "param": [
+          {
+            "key": "handle",
+            "type": "handle",
+            "desc": "handle from net.open"
+          },
+          {
+            "key": "data",
+            "type": "bytes",
+            "desc": "payload (a string is accepted and sent as its bytes)"
+          },
+          {
+            "key": "addr",
+            "type": "string",
+            "optional": true,
+            "desc": "destination \"a.b.c.d:port\" as handed to the handler; required for udp_trans"
+          }
+        ],
+        "ret": {
+          "type": "bool",
+          "desc": "false when the transport is closed or no matching peer accepted the bytes"
+        }
+      }
+    ],
+    "disconnect": [
+      {
+        "desc": "disconnect one peer of a server handle; the listening socket keeps running",
+        "param": [
+          {
+            "key": "handle",
+            "type": "handle",
+            "desc": "server handle from net.open"
+          },
+          {
+            "key": "addr",
+            "type": "string",
+            "desc": "peer address as handed to the handler"
+          }
+        ],
+        "ret": {
+          "type": "bool",
+          "desc": "true on success; a client or udp handle throws ArgError"
+        }
+      }
+    ],
+    "status": [
+      {
+        "desc": "delivery counters and the last transport error",
+        "param": [
+          {
+            "key": "handle",
+            "type": "handle",
+            "desc": "handle from net.open"
+          }
+        ],
+        "ret": {
+          "type": "map",
+          "desc": "{type, addr, closed, peers, rx, delivered, expired, full, errors, last_error}"
+        }
+      }
+    ],
+    "close": [
+      {
+        "desc": "stop the transport, join its threads and drop the handle's deliveries",
+        "param": [
+          {
+            "key": "handle",
+            "type": "handle",
+            "desc": "handle from net.open"
+          }
+        ]
+      }
+    ]
+  }
+}

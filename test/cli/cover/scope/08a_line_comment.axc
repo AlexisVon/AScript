@@ -1,0 +1,2 @@
+// Test 8a: // 行注释
+$io_print("PASS: 8a line comment\n");

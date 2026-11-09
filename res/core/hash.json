@@ -1,0 +1,75 @@
+{
+  "functions": {
+    "hash_crc32c": [
+      {
+        "desc": "CRC32C checksum (hardware-accelerated)",
+        "param": [
+          {
+            "key": "data",
+            "type": "bytes|string",
+            "desc": "data to hash"
+          }
+        ],
+        "ret": {
+          "type": "string",
+          "desc": "hex digest"
+        }
+      }
+    ],
+    "hash_sha1": [
+      {
+        "desc": "SHA-1 hash",
+        "param": [
+          {
+            "key": "data",
+            "type": "bytes|string",
+            "desc": "data to hash"
+          }
+        ],
+        "ret": {
+          "type": "string",
+          "desc": "hex digest"
+        }
+      }
+    ],
+    "hash_sha256": [
+      {
+        "desc": "SHA-256 hash",
+        "param": [
+          {
+            "key": "data",
+            "type": "bytes|string",
+            "desc": "data to hash"
+          }
+        ],
+        "ret": {
+          "type": "string",
+          "desc": "hex digest"
+        }
+      }
+    ],
+    "hash_file": [
+      {
+        "desc": "hash a file (streaming, for large files)",
+        "param": [
+          {
+            "key": "path",
+            "type": "string",
+            "desc": "file path"
+          },
+          {
+            "key": "type",
+            "type": "string",
+            "optional": true,
+            "default": "sha256",
+            "desc": "hash type: crc32c/sha1/sha256"
+          }
+        ],
+        "ret": {
+          "type": "string",
+          "desc": "hex digest"
+        }
+      }
+    ]
+  }
+}

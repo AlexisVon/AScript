@@ -1,0 +1,88 @@
+// Cover test: $fs_ management + stream handles ($fs_open + $io_read/$io_write)
+// fs = management (open/mkdir/rmdir/rmfile/info/parent/child); io = data flow
+// on handles; $io_fread/$io_fwrite remain the path-based fast path.
+
+def check(cond, msg) {
+    if (!cond) throw msg;
+}
+
+var base = "/tmp/ascript_fs_test";
+var d1 = base + "/sub";
+var f1 = d1 + "/a.axc";
+
+$fs_rmfile(f1);
+$fs_rmdir(d1);
+$fs_rmdir(base);
+
+// ── mkdir / open (w creates) ──
+check($fs_mkdir(base), "fs_mkdir base");
+check($fs_mkdir(d1), "fs_mkdir sub");
+check(!$fs_mkdir(d1), "fs_mkdir existing -> false");
+var h = $fs_open(f1, "w");
+check($io_write(h, "hello, world"), "fs_open w + io_write");
+check($io_write(h, "!") == true, "io_write append");
+var fi = $fs_info(f1);
+check(fi.exist, "fs_open w created file");
+
+// ── read handle ──
+var r = $fs_open(f1, "r");
+check($io_read(r) == bytes("hello, world!"), "io_read whole");
+check($io_read(r, 7) == bytes("world!"), "io_read ofst");
+check($io_read(r, 99) == bytes(""), "io_read ofst beyond -> empty");
+check($io_read(r, 0) == bytes("hello, world!"), "io_read ofst 0");
+
+// ── append mode ──
+var a = $fs_open(f1, "a");
+$io_write(a, " tail");
+check($io_read($fs_open(f1, "r")) == bytes("hello, world! tail"), "fs_open a append");
+
+// ── handle type errors ──
+var got = false;
+try { $io_read(h); } catch (e) { got = e.what == "TypeError"; }
+check(got, "io_read on write handle -> TypeError");
+got = false;
+try { $io_write(r, "x"); } catch (e) { got = e.what == "TypeError"; }
+check(got, "io_write on read handle -> TypeError");
+got = false;
+try { $fs_open(f1, "x"); } catch (e) { got = e.what == "ArgError"; }
+check(got, "fs_open bad mode -> ArgError");
+
+// ── bytes hex/base64 ──
+check(string(bytes("Hi"), "hex") == "4869", "bytes->hex");
+check(bytes("4869", "hex") == bytes("Hi"), "hex->bytes round-trip");
+check(string(bytes("Hi"), "base64") == "SGk=", "bytes->base64");
+check(bytes("SGk=", "base64") == bytes("Hi"), "base64->bytes round-trip");
+
+// ── info / parent / child ──
+var i = $fs_info(f1);
+check(i.exist && !i.dir && i.name == "a.axc" && i.suffix == ".axc", "fs_info fields");
+check(i.size == 18, "fs_info size");
+var di = $fs_info(d1);
+check(di.exist && di.dir, "fs_info dir");
+var mi = $fs_info(base + "/nope");
+check(!mi.exist, "fs_info missing -> exist=false");
+
+var p = $fs_parent(f1);
+check(p.path == d1 && p.dir, "fs_parent of file");
+var p2 = $fs_parent(d1 + "/");
+check(p2.path == base, "fs_parent of dir (trailing slash stripped)");
+
+var c = $fs_child(d1);
+check($vec_size(c) == 1 && c[0].name == "a.axc", "fs_child count");
+var caxc = $fs_child(d1, "*.axc");
+check(caxc[0].name == "a.axc", "fs_child filter");
+check($vec_size($fs_child(f1)) == 0, "fs_child non-dir -> empty");
+
+// ── remove ──
+check($fs_rmfile(f1), "fs_rmfile");
+var gone = $fs_info(f1);
+check(!gone.exist, "fs_rmfile gone");
+check($fs_rmdir(d1), "fs_rmdir");
+check($fs_rmdir(base), "fs_rmdir base");
+
+// ── arg validation ──
+got = false;
+try { $fs_info(42); } catch (e) { got = e.what == "ArgError"; }
+check(got, "fs_info non-string -> ArgError");
+
+$io_print("= $fs_ + $io_ stream OK =\n");

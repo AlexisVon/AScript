@@ -1,0 +1,9 @@
+// The table behind msp_replay.py: the real client's own captured frames (msp_frames.txt) ask for
+// CameraArea -- BYTE, the type those frames carry -- and the wire answers from here.
+
+link "cip.so" as cip;
+
+var srv = cip.listen("127.0.0.1:44838");
+cip.define_byte(srv, "CameraArea", [1, 101]);
+$sys_sleep(5000);
+$io_print("served\n");

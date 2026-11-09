@@ -1,0 +1,37 @@
+// Cover test: $bytes_xxx binary operations
+
+def check(cond, msg) {
+    if (!cond) throw msg;
+}
+
+// size
+var b = bytes("hello");
+check($bytes_size(b) == 5, "bytes_size");
+
+// find
+check($bytes_find(b, bytes("lo")) == 3, "bytes_find");
+check($bytes_find(b, bytes("xyz")) == -1, "bytes_find miss");
+check($bytes_find(b, bytes("l"), 3) == 3, "bytes_find from");
+
+// left / right
+check($bytes_size($bytes_left(b, 3)) == 3, "bytes_left");
+check($bytes_size($bytes_right(b, 2)) == 2, "bytes_right");
+
+// mid
+check($bytes_size($bytes_mid(b, 1, 3)) == 3, "bytes_mid");
+check($bytes_size($bytes_mid(b, 1)) == 4, "bytes_mid to end");
+
+// append
+var c = $bytes_append(b, bytes("!"));
+check($bytes_size(c) == 6, "bytes_append size");
+
+// revers
+var r = $bytes_revers(b);
+check($bytes_size(r) == 5, "bytes_revers size");
+
+// wrong type
+var got = false;
+try { $bytes_size("not bytes"); } catch (e) { got = e.what == "TypeError"; }
+check(got, "bytes wrong type -> TypeError");
+
+$io_print("= $bytes_ extends OK =\n");

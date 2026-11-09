@@ -1,0 +1,11 @@
+// Test 5e: for-in 隐式推帧
+var caught; caught = false;
+try {
+    var arr; arr = [1, 2];
+    var v;
+    for (v : arr) {
+        var fi; fi = "forin_var";
+    }
+    tmp = fi;
+} catch (e) { caught = true; }
+if (caught) { $io_print("PASS: 5e for-in frame var not visible outside\n"); } else { $io_print("FAIL\n"); }

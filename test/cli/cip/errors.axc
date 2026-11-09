@@ -1,0 +1,40 @@
+// Every refusal this link spells, as messages a test can grep. The two channels stay distinct:
+// a script mistake raises (e.info), a device that says no leaves false/null plus error().
+
+link "cip.so" as cip;
+
+try { cip.get("no", "A"); }
+catch (e) { $io_print("handle: %1\n", e.info); }
+try { cip.open("127.0.0.1:1", 300); }
+catch (e) { $io_print("connect: %1\n", e.info); }
+try { cip.listen("127.0.0.1:1"); }
+catch (e) { $io_print("listen: %1\n", e.info); }
+try { cip.open(42, 100); }
+catch (e) { $io_print("type: %1\n", e.info); }
+
+var srv = cip.listen("127.0.0.1:44836");
+var cli = cip.open("127.0.0.1:44836", 500);
+
+cip.define_dint(cli, "A");
+try { cip.define_dint(cli, "A"); }
+catch (e) { $io_print("dupdecl: %1\n", e.info); }
+try { cip.define_int(cli, "X", 0); }
+catch (e) { $io_print("count: %1\n", e.info); }
+try { cip.define_int(cli, "Y", [3]); }
+catch (e) { $io_print("dims: %1\n", e.info); }
+try { cip.define_int(cli, "Z", [2, 3, 4]); }
+catch (e) { $io_print("dims3: %1\n", e.info); }
+try { cip.get(cli, "Grid[x]"); }
+catch (e) { $io_print("tag: %1\n", e.info); }
+try { cip.set(cli, "A", "text"); }
+catch (e) { $io_print("value: %1\n", e.info); }
+
+$io_print("missing get=%1 reason=[%2]\n", cip.get(cli, "Nope"), cip.error(cli));
+$io_print("missing set=%1 reason=[%2]\n", cip.set(cli, "Nope", 1), cip.error(cli));
+
+// A handle copy shares the connection (make_ref): it is the same table and the same socket.
+var copy = cli;
+$io_print("copy points=%1 alive=%2\n", cip.points(copy)["A"], cip.alive(copy));
+
+cip.close(cli);
+cip.close(srv);

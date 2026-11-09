@@ -1,0 +1,114 @@
+// Cover test: container extends $vec_/$lst_/$map_ — direct passing
+// Containers are passed by reference (fwrap views, libalexis 2.1+); mutations
+// must be visible on the caller's variable. OOB/missing arg -> IndexError,
+// wrong type -> TypeError.
+
+def check(cond, msg) {
+    if (!cond) throw msg;
+}
+
+// ── $vec_ ──
+var v = [3, 1, 2];
+check($vec_size(v) == 3, "vec_size");
+check($vec_find(v, 1) == 1, "vec_find");
+check($vec_find(v, 99) == -1, "vec_find missing");
+check($vec_has(v, 2), "vec_has true");
+check(!$vec_has(v, 9), "vec_has false");
+check($vec_size([4, 5]) == 2, "vec_size literal arg");
+
+$vec_insert(v, 1, 99); // [3, 99, 1, 2]
+check(v[0] == 3 && v[1] == 99 && v[2] == 1 && v[3] == 2, "vec_insert in place");
+$vec_remove(v, 1); // [3, 1, 2]
+check(v[0] == 3 && v[1] == 1 && v[2] == 2, "vec_remove in place");
+$vec_sort(v); // [1, 2, 3]
+check(v[0] == 1 && v[1] == 2 && v[2] == 3, "vec_sort asc");
+$vec_sort(v, true); // [3, 2, 1]
+check(v[0] == 3 && v[1] == 2 && v[2] == 1, "vec_sort desc");
+$vec_reverse(v); // [1, 2, 3]
+check(v[0] == 1 && v[1] == 2 && v[2] == 3, "vec_reverse");
+
+var w = [10, 20];
+$vec_merge(v, w); // [1, 2, 3, 10, 20]
+check($vec_size(v) == 5 && v[3] == 10 && v[4] == 20, "vec_merge vec");
+var l1 = lst[7, 8];
+$vec_merge(v, l1); // +7, 8
+check($vec_size(v) == 7 && v[5] == 7 && v[6] == 8, "vec_merge lst");
+$vec_merge(v, v); // self-merge duplicates
+check($vec_size(v) == 14 && v[7] == 1, "vec_merge self");
+
+var got = false;
+try { $vec_size(42); } catch (e) { got = e.what == "TypeError"; }
+check(got, "vec wrong type -> TypeError");
+got = false;
+try { $vec_size(); } catch (e) { got = e.what == "IndexError"; }
+check(got, "vec missing arg -> IndexError");
+
+// ── $lst_ ──
+var l = lst[3, 1, 2];
+check($lst_size(l) == 3, "lst_size");
+check($lst_find(l, 1) == 1, "lst_find");
+check($lst_find(l, 99) == -1, "lst_find missing");
+check($lst_has(l, 2), "lst_has true");
+check(!$lst_has(l, 9), "lst_has false");
+
+$lst_insert(l, 1, 99); // 3, 99, 1, 2
+var sum, x; sum = 0;
+for (x : l) { sum += x; }
+check(sum == 105, "lst_insert in place");
+$lst_remove(l, 1); // 3, 1, 2
+sum = 0;
+for (x : l) { sum += x; }
+check(sum == 6, "lst_remove in place");
+
+var l2 = lst[7, 8];
+$lst_merge(l, l2); // +7, 8
+sum = 0;
+for (x : l) { sum += x; }
+check(sum == 21, "lst_merge lst");
+var v2 = [100];
+$lst_merge(l, v2); // +100
+sum = 0;
+for (x : l) { sum += x; }
+check(sum == 121, "lst_merge vec");
+$lst_merge(l, l); // self-merge duplicates
+sum = 0;
+for (x : l) { sum += x; }
+check(sum == 242, "lst_merge self");
+
+got = false;
+try { $lst_size("nope"); } catch (e) { got = e.what == "TypeError"; }
+check(got, "lst wrong type -> TypeError");
+got = false;
+try { $lst_size(); } catch (e) { got = e.what == "IndexError"; }
+check(got, "lst missing arg -> IndexError");
+
+// ── $map_ ──
+var d = map{"a": 1, "b": 2};
+check($map_size(d) == 2, "map_size");
+check($map_has(d, "a"), "map_has true");
+check(!$map_has(d, "x"), "map_has missing");
+check($map_get(d, "a") == 1, "map_get");
+check($map_get(d, "x", -1) == -1, "map_get default");
+check($map_get(d, "x") == null, "map_get null");
+
+$map_insert(d, "c", 3);
+check($map_size(d) == 3 && $map_get(d, "c") == 3, "map_insert in place");
+$map_remove(d, "a");
+check(!$map_has(d, "a") && $map_size(d) == 2, "map_remove in place");
+check($vec_size($map_keys(d)) == 2, "map_keys");
+check($vec_size($map_values(d)) == 2, "map_values");
+
+var e = map{"x": 9};
+$map_merge(d, e);
+check($map_get(d, "x") == 9, "map_merge");
+$map_merge(d, d); // self-merge no-op
+check($map_size(d) == 3, "map_merge self");
+
+got = false;
+try { $map_get(1.5, "k"); } catch (e) { got = e.what == "TypeError"; }
+check(got, "map wrong type -> TypeError");
+got = false;
+try { $map_keys(); } catch (e) { got = e.what == "IndexError"; }
+check(got, "map missing arg -> IndexError");
+
+$io_print("= container extends (direct passing) OK =\n");

@@ -1,0 +1,32 @@
+def f() {
+  return 42;
+}
+$io_print(f());
+$io_print("\n");
+
+def add(a, b) {
+  return a + b;
+}
+$io_print(add(3, 4));
+$io_print("\n");
+
+def no_return() {
+  var x = 1;
+}
+$io_print(no_return());
+$io_print("\n");
+
+def classify(n) {
+  if (n > 0) {
+    return "positive";
+  } else if (n < 0) {
+    return "negative";
+  }
+  return "zero";
+}
+$io_print(classify(5));
+$io_print("\n");
+$io_print(classify(-3));
+$io_print("\n");
+$io_print(classify(0));
+$io_print("\n");

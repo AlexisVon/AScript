@@ -1,0 +1,130 @@
+{
+  "functions": {
+    "fs_open": [
+      {
+        "desc": "open a stream handle (RAII: copies share it, the file closes when the last drops)",
+        "param": [
+          {
+            "key": "path",
+            "type": "string",
+            "desc": "file path"
+          },
+          {
+            "key": "mode",
+            "type": "string",
+            "optional": true,
+            "default": "r",
+            "desc": "r = read, w = write (truncate), a = append (create if missing)"
+          }
+        ],
+        "ret": {
+          "type": "handle",
+          "desc": "opaque stream handle for $io_read/$io_write; open failure -> empty read / false write"
+        }
+      }
+    ],
+    "fs_rmfile": [
+      {
+        "desc": "delete a file",
+        "param": [
+          {
+            "key": "path",
+            "type": "string",
+            "desc": "file path"
+          }
+        ],
+        "ret": {
+          "type": "bool",
+          "desc": "true on success"
+        }
+      }
+    ],
+    "fs_mkdir": [
+      {
+        "desc": "create a directory",
+        "param": [
+          {
+            "key": "path",
+            "type": "string",
+            "desc": "directory path"
+          }
+        ],
+        "ret": {
+          "type": "bool",
+          "desc": "true on success"
+        }
+      }
+    ],
+    "fs_rmdir": [
+      {
+        "desc": "delete an empty directory",
+        "param": [
+          {
+            "key": "path",
+            "type": "string",
+            "desc": "directory path"
+          }
+        ],
+        "ret": {
+          "type": "bool",
+          "desc": "true on success"
+        }
+      }
+    ],
+    "fs_info": [
+      {
+        "desc": "file/dir info as a map",
+        "param": [
+          {
+            "key": "path",
+            "type": "string",
+            "desc": "path to inspect (missing -> map with exist=false)"
+          }
+        ],
+        "ret": {
+          "type": "map",
+          "desc": "{name, path, suffix, size, time_ct, time_la, time_lw, dir, exist, link}"
+        }
+      }
+    ],
+    "fs_parent": [
+      {
+        "desc": "parent directory info as a map",
+        "param": [
+          {
+            "key": "path",
+            "type": "string",
+            "desc": "path (trailing '/' stripped; no slash -> cwd)"
+          }
+        ],
+        "ret": {
+          "type": "map",
+          "desc": "same fields as fs_info"
+        }
+      }
+    ],
+    "fs_child": [
+      {
+        "desc": "directory children as vec of info maps",
+        "param": [
+          {
+            "key": "path",
+            "type": "string",
+            "desc": "directory path (non-dir or missing -> empty vec)"
+          },
+          {
+            "key": "filter",
+            "type": "string",
+            "optional": true,
+            "default": "*",
+            "desc": "glob filter, e.g. \"*.axc\""
+          }
+        ],
+        "ret": {
+          "type": "vec",
+          "desc": "child info maps (same fields as fs_info)"
+        }
+      }
+    ]
+  }
+}

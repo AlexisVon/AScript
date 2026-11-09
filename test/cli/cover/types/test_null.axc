@@ -1,0 +1,50 @@
+// §3.5 null — default init, ==/!=, type
+// lang-guide §3.5
+
+var passed = 0;
+var failed = 0;
+var failures = "";
+
+def to_str(v) { if (v == null) { return "null"; } return string(v); }
+def assert_eq(a, e, n) { if (a == e) { passed = passed + 1; return; } failed = failed + 1; failures = failures + "  FAIL " + n + ": expected " + to_str(e) + " got " + to_str(a) + "\n"; }
+def assert_true(c, n) { if (c) { passed = passed + 1; return; } failed = failed + 1; failures = failures + "  FAIL " + n + ": expected true\n"; }
+
+// ---- uninitialized var = null ----
+var x;
+assert_eq(x, null, "uninitialized var = null");
+
+// ---- explicit null ----
+var n = null;
+assert_eq(n, null, "explicit null = null");
+
+// ---- null == null ----
+assert_true(null == null, "null == null = true");
+
+// ---- null != null ----
+assert_true(!(null != null), "null != null = false");
+
+// ---- null vs other types ----
+assert_true(!(null == 0), "null == 0 = false");
+assert_true(null != 0, "null != 0 = true");
+assert_true(!(null == ""), "null == \"\" = false");
+
+// ---- null ordered comparison → TypeError ----
+var _hit = false;
+try { var _tmp = null < 1; } catch (_e) { _hit = true; }
+assert_true(_hit, "null < 1 throws TypeError");
+
+_hit = false;
+try { var _tmp = null > 0; } catch (_e) { _hit = true; }
+assert_true(_hit, "null > 0 throws TypeError");
+
+// ---- type check ----
+assert_eq(type(null), "null", "type(null) = null");
+
+// ---- $io_print(null) outputs "null" (visual verification) ----
+// Covered by batch1 demo tests. Skip here.
+
+if (failed > 0) {
+    $io_print("\n=== FAIL: test_null ===\n");
+    $io_print("Passed: %1 / %2\n", passed, passed + failed);
+    $io_print("FAILURES:\n%1", failures);
+}

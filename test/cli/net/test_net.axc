@@ -1,0 +1,112 @@
+// ====== test_net.axc — net link TCP/UDP: delivery, backpressure, disconnect, expiry ======
+link "net.so" as net;
+
+var passed = 0;
+var failed = 0;
+def assert_eq(a, b, n) {
+    if (a == b) { passed = passed + 1; return; }
+    failed = failed + 1;
+    $io_print("FAIL " + n + ": expected " + string(b) + " got " + string(a) + "\n");
+}
+def assert_true(c, n) {
+    if (c) { passed = passed + 1; return; }
+    failed = failed + 1;
+    $io_print("FAIL " + n + ": expected true\n");
+}
+
+var badaddr = false;
+try { net.open("tcp_server", "localhost:39736"); } catch (e) { badaddr = true; }
+assert_true(badaddr, "non-canonical address refused");
+
+// ── TCP: the server runs in a child engine, the client in this one ──
+var srv_src = `
+link "net.so" as net;
+var s = net.open("tcp_server", "127.0.0.1:39731");
+net.on_recv(s, "on_r");
+net.on_event(s, "on_e");
+def on_r(addr, data) { net.send(s, data, addr); }
+def on_e(addr, connected) { }
+while (true) { yield(20); }
+`;
+var th = $thd_create(srv_src);
+
+var c = null;
+var tries = 0;
+while (c == null && tries < 100) {
+    try { c = net.open("tcp_client", "127.0.0.1:39731"); }
+    catch (e) { $sys_sleep(10); tries = tries + 1; }
+}
+assert_true(c != null, "tcp client connects");
+
+var echo = "";
+def on_echo(addr, data) { echo = string(data); }
+net.on_recv(c, "on_echo");
+net.send(c, "hello", "127.0.0.1:39731");
+var spins = 0;
+while (echo == "" && spins < 100) { yield(20); spins = spins + 1; }
+assert_eq(echo, "hello", "tcp echo through the child server");
+
+var st = net.status(c);
+assert_true(st["rx"] >= 1, "tcp rx counter");
+assert_true(st["delivered"] >= 1, "tcp delivered counter");
+
+var disc = false;
+try { net.disconnect(c, "127.0.0.1:39731"); } catch (e) { disc = true; }
+assert_true(disc, "net_disconnect refused on a client");
+
+net.close(c);
+delete th;
+
+// ── UDP: two sockets in this engine ──
+var u1 = net.open("udp_trans", "127.0.0.1:39732");
+var u2 = net.open("udp_trans", "127.0.0.1:39733");
+var u1_in = "";
+def on_u1(addr, data) { u1_in = string(data); }
+def on_u2(addr, data) { net.send(u2, data, addr); }
+net.on_recv(u1, "on_u1");
+net.on_recv(u2, "on_u2");
+net.send(u1, "ping", "127.0.0.1:39733");
+var k = 0;
+while (u1_in == "" && k < 100) { yield(20); k = k + 1; }
+assert_eq(u1_in, "ping", "udp echo");
+
+// expiry: sleep past the 100ms window, then a second datagram wakes the reaper
+net.send(u1, "expire", "127.0.0.1:39733");
+$sys_sleep(250);
+net.send(u1, "trigger", "127.0.0.1:39733");
+yield(50);
+var su = net.status(u2);
+assert_true(su["expired"] >= 1, "udp expired counter");
+
+net.close(u1);
+net.close(u2);
+
+// ── TCP: net_disconnect kicks one peer, the peer sees the disconnect ──
+var s3 = net.open("tcp_server", "127.0.0.1:39735");
+var c3 = net.open("tcp_client", "127.0.0.1:39735");
+var kicked = false;
+var c3_down = false;
+def on_s3r(addr, data) { kicked = true; net.disconnect(s3, addr); }
+def on_c3e(addr, connected) { if (!connected) { c3_down = true; } }
+net.on_recv(s3, "on_s3r");
+net.on_event(c3, "on_c3e");
+net.send(c3, "kick", "127.0.0.1:39735");
+var q = 0;
+while (!c3_down && q < 100) { yield(20); q = q + 1; }
+assert_true(kicked, "server handle disconnected the peer");
+assert_true(c3_down, "client saw the disconnect event");
+net.close(s3);
+net.close(c3);
+
+// ── TCP: close from inside a receive handler must not deadlock ──
+var s2 = net.open("tcp_server", "127.0.0.1:39734");
+var c2 = net.open("tcp_client", "127.0.0.1:39734");
+def on_s2(addr, data) { net.close(s2); }
+net.on_recv(s2, "on_s2");
+net.send(c2, "bye", "127.0.0.1:39734");
+yield(100);
+net.close(c2);
+assert_true(true, "close from a handler did not deadlock");
+
+$io_print("--- test_net: " + string(passed) + " passed, " + string(failed) + " failed ---");
+if (failed > 0) { throw "test_net: " + string(failed) + " failure(s)"; }

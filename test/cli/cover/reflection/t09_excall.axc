@@ -1,0 +1,45 @@
+// T09: 引用反射 — 扩展函数调用
+// @("$xxx")() — $ 前缀直接查 extend 表（快速路径）
+
+// 1. 字面名字符串
+$io_print("T09.1 @(\"$io_print\")(): ");
+@("$io_print")("reflect call ok");
+$io_print("OK");
+
+// 2. 计算出的名字
+var n = "$io_print";
+@(n)("reflect computed name ok");
+$io_print("OK");
+
+// 3. 返回值参与表达式
+@("$io_print")("T09.3 reflect in expr: ", 1 + 1);
+$io_print("OK");
+
+// 4. 缺失扩展 → NameError（字符串形式编译期不校验）
+var got_error = false;
+try {
+    @("$no_such_ext_xyz")();
+} catch (e) {
+    got_error = true;
+    $io_print("T09.4 missing caught: ", e);
+}
+if (!got_error) { $io_print("FAIL T09.4"); throw("assert"); }
+$io_print("OK");
+
+// 5. 静态定义取值（编译期折叠）: $name 无括号 = 常量
+var pi = $math_PI;
+if (pi != 3.141592653589793) { $io_print("FAIL T09.5 fold"); throw("assert"); }
+$io_print("T09.5 $math_PI folded: ", pi);
+
+// 6. 反射取值（运行期快速路径查 define 表）
+var pi2 = @("$math_PI");
+if (pi2 != 3.141592653589793) { $io_print("FAIL T09.6 reflect"); throw("assert"); }
+$io_print("T09.6 @(\"$math_PI\") ok");
+
+// 7. 版本静态定义（AScript 宿主注册）: $vtype / $etype
+if ($vtype != 0) { $io_print("FAIL T09.7 vtype: ", $vtype); throw("assert"); } // + O_EVAL (2026-08-07)
+if ($etype != "axc-1.0") { $io_print("FAIL T09.7 etype: ", $etype); throw("assert"); }
+$io_print("T09.7 $vtype/$etype: ", $vtype, " / ", $etype);
+
+// 8. 未注册静态定义 → 编译错误（parse 阶段）
+// var bad = $no_such_def;  // 编译错误，此处无法用 try 捕获，仅注释演示

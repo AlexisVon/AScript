@@ -1,0 +1,46 @@
+// Test 4.3: map (dictionary)
+
+$io_print("= 4.3 map tests =\n");
+
+// --- Literal creation ---
+var d; d = map{"key": "value", "n": 1};
+$io_print("map type: %1\n", type(d));
+$io_print("d.key=%1, d[\"key\"]=%2, d.n=%3\n", d.key, d["key"], d.n);
+
+// --- Non-string key throws TypeError ---
+try {
+    tmp = d[42];
+    $io_print("ERROR: d[42] should have thrown TypeError\n");
+} catch (e) {
+    $io_print("d[non-string] correctly throws: %1\n", e);
+}
+
+// --- dot access ---
+$io_print("d.key=%1\n", d.key);
+
+// --- index access ---
+$io_print("d[\"key\"]=%1\n", d["key"]);
+
+// --- write ---
+d["new"] = 42;
+$io_print("after d[\"new\"]=42: d.new=%1\n", d.new);
+
+d.newKey = 88;
+$io_print("after d.newKey=88: d[\"newKey\"]=%1\n", d["newKey"]);
+
+// --- missing key read returns null ---
+var missing; missing = d.doesNotExist;
+$io_print("d.doesNotExist=%1\n", missing);
+
+// --- for-in ---
+var kv;
+$io_print("for-in over map:\n");
+for (kv : d) {
+    $io_print("  key=%1 value=%2\n", kv.key, kv.value);
+}
+
+// --- empty map ---
+var e; e = map{};
+$io_print("empty map type: %1\n", type(e));
+
+$io_print("=== map tests done ===\n");

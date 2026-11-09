@@ -1,0 +1,52 @@
+// 3.6 真值规则 — string/vec/map/lst/null 不能直接用于控制流
+// 必须通过 bool() 显式转换
+$io_print("--- test_truthy_string_container ---");
+
+// string 直接用于 if 应报 TypeError
+try {
+    var s = "hello";
+    if (s) { $io_print("string in if - should NOT reach"); }
+} catch (e) {
+    var tp = e.what;
+    var vl = e.info;
+    $io_print("string in if: %1: %2", tp, vl);
+}
+
+// vec 直接用于 if 应报 TypeError
+try {
+    var v = [1, 2];
+    if (v) { $io_print("vec in if - should NOT reach"); }
+} catch (e) {
+    var tp = e.what;
+    var vl = e.info;
+    $io_print("vec in if: %1: %2", tp, vl);
+}
+
+// map 直接用于 if 应报 TypeError
+try {
+    var m = map{"a": 1};
+    if (m) { $io_print("map in if - should NOT reach"); }
+} catch (e) {
+    var tp = e.what;
+    var vl = e.info;
+    $io_print("map in if: %1: %2", tp, vl);
+}
+
+// lst 直接用于 if 应报 TypeError
+try {
+    var l = lst[1, 2];
+    if (l) { $io_print("lst in if - should NOT reach"); }
+} catch (e) {
+    var tp = e.what;
+    var vl = e.info;
+    $io_print("lst in if: %1: %2", tp, vl);
+}
+
+// null 直接用于 if 应报 TypeError
+try {
+    if (null) { $io_print("null in if - should NOT reach"); }
+} catch (e) {
+    var tp = e.what;
+    var vl = e.info;
+    $io_print("null in if: %1: %2", tp, vl);
+}

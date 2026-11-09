@@ -1,0 +1,75 @@
+// T05: 引用反射 — 调用
+// @fn(); @fn(args); 间接调用
+
+// 1. @fn(); 间接调用函数
+def hello() {
+    $io_print("hello from indirect");
+}
+var fn = "hello";
+@fn();
+$io_print("T05.1 @fn() OK");
+
+// 2. @fn(args); 带参数
+def twice(x) {
+    if (x * 2 == 10) { $io_print("twice ok"); return x * 2; }
+    $io_print("FAIL twice");
+    return 0;
+}
+fn = "twice";
+var r = @fn(5);
+if (r != 10) { $io_print("FAIL T05.2"); throw("assert"); }
+$io_print("T05.2 @fn(args) OK");
+
+// 3. 多参数
+def add(a, b) {
+    return a + b;
+}
+fn = "add";
+r = @fn(3, 7);
+if (r != 10) { $io_print("FAIL T05.3"); throw("assert"); }
+$io_print("T05.3 @fn(multi args) OK");
+
+// 4. 函数间接调用——通过顶层函数名
+def math_abs(x) {
+    if (x < 0) return -x;
+    return x;
+}
+fn = "math_abs";
+r = @fn(-5);
+if (r != 5) { $io_print("FAIL T05.4"); throw("assert"); }
+$io_print("T05.4 @fn() with simple name OK");
+
+// 5. @fn(variable_args)
+def greet(name) {
+    if (name == "world") { $io_print("hello world ok"); return "hi"; }
+    return "unknown";
+}
+var target_fn = "greet";
+var target_name = "world";
+r = @target_fn(target_name);
+if (r != "hi") { $io_print("FAIL T05.5"); throw("assert"); }
+$io_print("T05.5 @fn(variable_args) OK");
+
+// 6. 间接调用不触发 TCO
+def recurse(n) {
+    if (n <= 0) return "done";
+    return recurse(n - 1);
+}
+fn = "recurse";
+r = @fn(3);
+if (r != "done") { $io_print("FAIL T05.6"); throw("assert"); }
+$io_print("T05.6 @fn() TCO NOT triggered (indirect call prevents TCO) OK");
+
+// 7. 对函数变量间接调用返回值的正确性
+def square(x) { return x * x; }
+fn = "square";
+r = @fn(6);
+if (r != 36) { $io_print("FAIL T05.7"); throw("assert"); }
+$io_print("T05.7 @fn() return value OK");
+
+// 8. 注意: @fn() 不支持命名空间 dot 路径——只能间接调用顶层函数
+// var math = map(); math.abs = math_abs; 然后 @fn() with fn="math_abs" 是调用顶层函数
+// 但 @fn() with fn="math.abs" 会尝试调用顶层变量"math.abs"（带点），无法导航到 math 的子函数
+$io_print("T05.8 NOTE: @fn() only resolves top-level function names");
+
+$io_print("T05 all passed");

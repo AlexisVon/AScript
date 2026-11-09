@@ -1,0 +1,37 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "configure",
+            "type": "shell",
+            "command": "mkdir -p build && cd build && cmake ..",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "Configure CMake"
+        },
+        {
+            "label": "build",
+            "type": "shell",
+            "command": "cmake --build build -j7",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "Build AScript"
+        },
+        {
+            "label": "rebuild",
+            "type": "shell",
+            "command": "rm -rf build && mkdir build && cd build && cmake .. && cmake --build . -j7",
+            "detail": "Full rebuild"
+        },
+        {
+            "label": "test",
+            "type": "shell",
+            "command": "cd test/cli && ./test.sh",
+            "detail": "Run CLI tests"
+        }
+    ]
+}

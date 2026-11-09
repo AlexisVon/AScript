@@ -1,0 +1,1768 @@
+# Alexis Script 语言参考
+
+AScript 内置的脚本语言（底层引擎 AlxLib 1.4.2）。本文档描述语言本身与 AScript 提供的扩展函数（`$io_xxx` / `$sys_xxx` / `$math_xxx`）；引擎 C++ 接口、宿主 API 不在本文档范围。
+<div style="page-break-after: always;"></div>
+
+---
+
+# 1. 快速上手
+
+```js
+var name = $io_input();
+$io_print("Hello, %1!\n", name);
+```
+
+运行：
+
+```bash
+AScript file.axc             # 执行文件
+AScript -c file.axc          # 编译为 .axp
+AScript -x file.axp          # 执行编译码
+AScript -j file.axc          # 打印 AST
+```
+
+**注释**：`//` 行注释，`/* */` 块注释（不可嵌套）。
+
+```js
+// 行注释
+var x;  // 行尾注释
+/*
+   块注释
+   多行内容
+*/
+```
+
+<div style="page-break-after: always;"></div>
+
+---
+
+# 2. 关键词 + 运算符优先级
+
+## 2.1 关键词全表
+
+19 个基础关键字 + 5 个常量 + 14 个内置函数名（保留，不可做标识符）：
+
+```
+var    def    if     else   while  for
+break  continue  return  import  link  as
+try    catch  throw  switch  case   default
+delete
+true   false  null   nan    inf
+```
+
+内置函数名（保留字，禁止用于变量/函数/参数/as 别名）：
+
+```
+int   float  string  bool   bytes  vec    map
+lst   type   env    here   eval   trap   yield
+```
+
+`$xxx` 扩展函数（AScript 注册）：`$io_print` `$io_input` `$io_fread` `$io_fwrite` `$io_tojs` `$io_fmjs` `$sys_exec` `$sys_datetime`、`$math_xxx` 系列—— `$` 前缀命名空间与用户函数互不冲突；未注册的 `$xxx` 在正常编译路径下编译期报错（`eval` / `@` 运行期编译时宿主表未知，报运行期 `NameError`）。完整清单见 §9.1/§9.2。
+
+`map` 是关键字、兼任转换函数名，不可作标识符。`{ }` 永远是代码块，字典用 `map{}`。`[...]` 可裸用（默认 vec），也可显式指定 `vec[...]` / `lst[...]`。
+
+## 2.2 运算符优先级
+
+| 级别 | 运算符 | 结合性 |
+|:----:|--------|:-----:|
+| 1 | `,` | 左 |
+| 2 | `= += -= *= /= %= <<= >>= &= \|= ^=` | 右 |
+| 3 | `?:` | 右 |
+| 4 | `\|\|` | 左 |
+| 5 | `&&` | 左 |
+| 6 | `\|` | 左 |
+| 7 | `^` | 左 |
+| 8 | `&` | 左 |
+| 9 | `==` `!=` | 左 |
+| 10 | `<` `>` `<=` `>=` | 左 |
+| 11 | `<<` `>>` | 左 |
+| 12 | `+` `-` | 左 |
+| 13 | `*` `/` `%` | 左 |
+| 14 | `++` `--` `!` `~` `+` `-`（一元） | 右 |
+| 15 | `@` `delete`（前缀） | `delete` 右结合（操作数 = 完整后缀链）；`@` = primary + dot 链（`[]` / `++` / `--` 在读取之后生效，§10.1；不允许裸 `@@`） |
+| 16 | `++` `--` `.` `..` `[]` `()`（后缀） | 左 |
+
+级别 7 的 `^` 是两个操作数之间的按位 XOR；在操作数位置——链首、没有左操作数——同一 token 是**激活锚**（§13.3）：`^x`、`^^x`。位置决定含义，没有其他 `^` 形式。
+
+<div style="page-break-after: always;"></div>
+
+---
+
+# 3. 基本类型
+
+| 类型 | 说明 |
+|------|------|
+| `int` | 64 位有符号整数 |
+| `float` | 双精度浮点数 |
+| `bool` | 布尔值 `true` / `false` |
+| `string` | UTF-8 字符串 |
+| `bytes` | 字节数组（字节值可读写，§3.7） |
+| `null` | 空值 |
+
+## 3.1 int
+
+64 位有符号整数，等价于 C `long long`，范围 `[-9223372036854775808, 9223372036854775807]`。
+
+```js
+var x = 42, y = -1;
+// 十六进制 / 八进制 / 二进制
+var hex = 0xFF, oct = 0o77, bin = 0b1010;
+```
+
+> `-9223372036854775808`（INT64_MIN）无法直接书写（同 C/C++），绝对值部分溢出。用 `-9223372036854775807 - 1` 替代。
+
+## 3.2 float
+
+64 位 IEEE 754 双精度浮点，等价于 C `double`。
+
+```js
+var pi = 3.14;
+var sci = 1e5;
+var small = 1.5e-3;
+```
+
+## 3.3 bool
+
+```js
+var flag = true;
+var off = false;
+```
+
+> bool 是独立类型，不能与 int 比较（`true == 1` → TypeError）、不能参与位运算（`true & true` → TypeError）。强调 "bool 不是 int"。
+
+## 3.4 string / 字符字面量
+
+```js
+var s = "hello";           // 双引号 — 字节串；内部 " 需转义 \"
+var esc = "line1\nline2";  // 转义序列
+var c = 'A';               // 单引号 — 恰好一个 Unicode 码点，求值为 int（65）
+var nl = '\n';             // 转义解码后是码点（10）
+var raw = `raw \n "a" 'b'`;  // raw string — 不处理转义，可跨多行
+```
+
+**string**（`"..."`）：字节串。转义序列：`\t` `\r` `\n` `\\` `\'` `\"` `\0` `\xNN`——`\xNN` 是单字节 0xNN。串内含 `'` 不需转义。
+
+**字符字面量**（`'...'`）：恰好一个 Unicode 码点，求值为它的 `int` 值——`'A'` = 65、`'é'` = 233、`'你'` = 20320、`'𝄞'` = 119070。码点可以直接写成 UTF-8 字符（会做校验）或转义；字符字面量里 `\xNN` 表示码点 U+00NN（`'\xE9'` = 233，区别于字符串里的字节 0xE9）。空（`''`）、多于一个码点、非法 UTF-8 都是编译错误。未知转义丢反斜杠、保留后一个字节，与 `"..."` 同一字节规则（`'\q'` = 113）；反斜杠在多字节字符前不是转义而是两个字符，字符字面量只容一个，直接拒绝。
+
+**raw string**（`` `...` ``）：反引号内的字符原样保留，不处理转义，可跨多行。适合正则、JSON 内嵌、含大量反斜杠的文本。
+
+## 3.5 null
+
+```js
+var x;
+$io_print(x);  // → null
+```
+
+## 3.6 nan / inf
+
+```js
+var x = nan;
+var y = inf;
+$io_print(string(nan == nan));  // false — NaN 自不等
+$io_print(string(inf == inf));  // true
+$io_print(type(nan));  // → "float"
+$io_print(type(inf));  // → "float"
+```
+
+- `nan`：IEEE NaN，自不等（`nan != nan` 为 true），传播污染（`nan + 1` = `nan`）
+- `inf`：IEEE 正无穷，`inf + 1` = `inf`，`inf > 任意有限数` 为 true
+- `float("inf")`/`float("+inf")`/`float("-inf")`/`float("nan")` 显式字符串转换允许
+- `float("1e999")` 等溢出产生的 inf/nan → ConvError
+- `string(inf)` → `"inf"`，`string(nan)` → `"nan"`，`float`↔`string` 闭环
+
+## 3.7 bytes
+
+被动类型：无字面量，仅通过转换函数产生。
+
+```js
+bytes("hello")              // raw copy
+bytes("hello", "utf8")      // encode with encoding
+bytes("48656C6C6F", "hex")  // decode hex
+bytes("SGVsbG8=", "base64") // decode base64
+```
+
+支持编码：`utf8` / `utf8bom` / `gbk` / `utf16` / `utf16le` / `utf16lebom` / `utf16be` / `utf16bebom` / `hex` / `base64`。编码名大小写与分隔词随意——先折成"只留字母数字 + 小写"再匹配，`UTF-8` / `utf8` / `utf_8` / `utf 8` 等价；裸 `utf16` = `utf16le`（无 BOM）。未知名字 → `ConvError`，报错会列出最接近的 3 个候选与全部合法名字。
+
+运算限制：仅 `==` / `!=` 逐字节比较，其余运算符 → `TypeError`。`[]` 索引/赋值可用，元素是 byte 值（int 0-255），与 string 同规则（§6.3）。
+
+```js
+var b = bytes("abc");
+b == bytes("abc")    // true
+b == bytes("xyz")    // false
+b + 1                // TypeError
+b[0]                 // 97 — byte 值
+b[0] = 122;          // 写 int 字节
+type(b)              // "bytes"
+bool(bytes())        // false（空）
+```
+
+## 3.8 真值规则
+
+**控制流**（`if`/`while`/`for`/`&&`/`||`/`!`/`?:`）接受以下类型：
+
+| 类型 | truthy | falsy |
+|------|--------|-------|
+| `bool` | `true` | `false` |
+| `int` | 非零 | `0` |
+| `float` | 非零 | `0.0` |
+
+`string`、`bytes`、`vec`、`map`、`lst`、`null` **不可直接用于控制流**，需通过 `bool()` 显式转换。`bool()` 的真值规则：
+
+- 非空 string → true，空 string → false
+- 非空 bytes → true，空 bytes → false
+- 非空 vec / map / lst → true，空容器 → false
+- `null` → false
+
+> 设计意图：数字 `0`=falsy 是跨语言共识，直接支持。string/bytes 的真值为非空判断，简单明确。`bool→string→bool` 闭环：`string(true)` → `"true"`，`bool("true")` → `true`。string/bytes → bool 永不抛异常。
+
+## 3.9 字面量语法
+
+| 类型 | 示例 |
+|------|------|
+| 整数 | `123` `0xFF` `0o77` `0b1010` |
+| 浮点 | `3.14` `1e5` `1.5e-3` |
+| 字符串 | `"hello"` `"esc\n"` `` `raw str` `` |
+| 字符字面量 | `'A'` `'\n'` `'你'`（求值为 int） |
+| 布尔 | `true` `false` |
+| 空值 | `null` |
+| 特殊浮点 | `nan` `inf` |
+
+标识符：`[a-zA-Z_][a-zA-Z0-9_]*`，不能与关键字重名。
+
+<div style="page-break-after: always;"></div>
+
+---
+
+# 4. 容器类型
+
+## 4.1 vec
+
+动态数组，`[...]` 或 `vec[...]` 字面量，连续内存。
+
+```js
+var v = [1, 2, 3];
+v = vec[1, 2, 3];            // 显式 vec
+v[0] = 99;
+$io_print(string(v[-1]));    // → 3（尾元素，负索引）
+```
+
+## 4.2 lst
+
+链表，`lst[...]` 字面量，O(n) 遍历读写任意位置（大 lst 慎用随机索引）、for-each 遍历。
+
+```js
+var l = lst[1, 2, 3];
+l = lst([1, 2, 3]);          // vec → lst
+$io_print(string(l[0]));     // → 1
+for (var x : l) { $io_print(string(x)); }
+```
+
+## 4.3 map
+
+键值对，`map{}` 字面量。`{ }` 永远是代码块。key 必须为 string，非 string 抛 TypeError。
+
+```js
+var d = map{"key": "value", "n": 1};
+d["new"] = 42;
+$io_print(string(d.key));     // dot 访问
+$io_print(string(d["key"]));  // index 访问
+```
+
+## 4.4 fill 语法
+
+`vec[...]`、`lst[...]` 和 bare `[...]` 均支持 fill 语法：
+
+```js
+[0:5]        // 5 个 0
+vec[:5]      // 5 个 null
+lst[1:3]     // [1, 1, 1]
+[1,2,3:3]    // [1, 2, 3, 3, 3] — fill suffix
+```
+
+- `[val:N]` — N 份 val
+- `[:N]` — N 份 null
+- `[..., last:N]` — 以末元素为 val，补至 N 份
+- 运行时 count 受引擎资源上限限制（默认 0 = 不限制），超限抛 `ResourceError`；AScript 可用 `--max-vecfill N` 启用与调整
+
+<div style="page-break-after: always;"></div>
+
+---
+
+# 5. 类型转换矩阵
+
+## 5.1 转换函数
+
+> **null 默认值**：所有转换函数对 null 输入返回类型默认值（`int→0`, `float→0.0`, `string→""`, `bool→false`, `bytes→空`, `vec/lst→[]`, `map→{}`）。无参调用（`int()`, `float()` 等）同理。
+
+```js
+int(v)
+float(v)
+string(v)
+bool(v)     // 永不抛
+bytes(v)
+bytes(v, enc)
+vec(v)
+map(v)
+lst(v)
+```
+
+- **实参个数**：`int`/`float`/`bool`/`vec`/`lst`/`type`/`env` 至多一个实参；`bytes` 至多两个；`map` 一个实参或键值对（`map(k, v, ...)`，悬空键 → `ArgError`）；`string` 的 base/precision/encoding 形态恰好两个，只有格式形态 `string(fmt, args...)` 变参。多余实参 → `ArgError`，且**不被求值**。内建调用不接受 spread——`type(v[])` → `TypeError`（`spread [] is not a value`）；`[]` 只属于脚本 def 的实参。
+
+| 函数 | 说明 |
+|------|------|
+| `int(v)` | → int，字符串支持 `0x`/`0o`/`0b` 前缀；null→0 |
+| `float(v)` | → float，字符串接受 `"inf"`/`"nan"` 等，溢出抛 ConvError；null→0.0 |
+| `string(v)` | → string，double 走 `%.6f`、去尾零但保留一位（3.14→`"3.14"`，2.0→`"2.0"`），`\|v\| < 5e-7` 改用 `%g`（1e-7→`"1e-07"`）；null→"" |
+| `bool(v)` | → bool；对列出的类型永不抛（其余，含 link/import 实例 → `ConvError`） |
+| `bytes(v)` | → bytes，raw copy（string → 字节拷贝）；null→空 bytes |
+| `bytes(v, enc)` | → bytes，按编码转换（utf8/gbk/hex/base64 等，名字折写规则见 §3.7） |
+| `vec(v)` / `map(v)` / `lst(v)` | → 对应容器，失败 ConvError；null→空容器 |
+
+**string 重载**（格式化，非基本转换）：
+
+```js
+string(int, base)       // 进制转换，base: 2/8/10/16
+string(double, prec)    // 精度控制，prec=0→整数
+string(fmt, args...)    // 格式串 %1 %2 ...，%% 输出字面 %
+string(bytes, enc)      // bytes 按编码转 string（utf8/gbk 解码；hex/base64 编码为文本）
+```
+
+## 5.2 转换矩阵
+
+| 源 \ 目标 | `int` | `float` | `bool` | `string` | `bytes` | `vec` | `map` | `lst` |
+|-----------|-------|---------|--------|----------|---------|-------|-------|-------|
+| **int** | 自身 | 提升 | ≠0 | to_string | TypeErr | [int] | ConvErr | [int] |
+| **float** | 截断 | 自身 | ≠0.0 | `%.6f` 去尾零保一位 | TypeErr | [float] | ConvErr | [float] |
+| **bool** | 1/0 | 1.0/0.0 | 自身 | "true"/"false" | TypeErr | [bool] | ConvErr | [bool] |
+| **string** | 严格 int | 严格 float | !empty() | 自身 | raw/enc | per-char | ConvErr | per-char |
+| **bytes** | ConvErr | ConvErr | !empty() | raw/enc | TypeErr | ConvErr | ConvErr | ConvErr |
+| **vec** | s1_recur | s1_recur | !empty() | int→UTF-8 / str→join | TypeErr | 自身 | ConvErr | copy |
+| **map** | ConvErr | ConvErr | !empty() | ConvErr | TypeErr | ConvErr | 自身 | ConvErr |
+| **lst** | s1_recur | s1_recur | !empty() | int→UTF-8 / str→join | TypeErr | copy | ConvErr | 自身 |
+| **null** | 0 | 0.0 | false | "" | 空bytes | [] | {} | [] |
+
+- **UTF-8 编解码**：string→vec/lst 将 UTF-8 字节解码为 Unicode code point 整数（`vec("你好")` → `[20320, 22909]`）。vec/lst→string：全 int 则将每个 int 作为 code point 编码为 UTF-8 字节（`string([20320, 22909])` → `"你好"`）；全 string 则拼接。无效 UTF-8 序列或非法 code point → `ConvError`
+- **s1_recur**：size==1 时递归转换唯一元素
+- string→bool / bytes→bool：非空 = true，空 = false。永不抛
+- **null 默认值**：`int(null)→0`, `float(null)→0.0`, `string(null)→""`, `bool(null)→false`, `bytes(null)→空bytes`, `vec(null)→[]`, `map(null)→{}`, `lst(null)→[]`。所有无参转换（`int()`, `float()` 等）同样返回类型默认值
+
+## 5.3 type()
+
+```js
+type(42);        // "int"
+type(3.14);      // "float"
+type("hello");   // "string"
+type(true);      // "bool"
+type(bytes());   // "bytes"
+type(null);      // "null"
+type([1,2]);     // "vec"
+type(lst[]);     // "lst"
+type(map{});     // "map"
+```
+
+值也可以是**句柄**（handle，只有引擎和宿主产生）——脚本读 `import`/`link` 别名（§11.3）或宿主扩展交出的对象时拿到。`type()` 命名引擎自己的句柄种类：
+
+| 值 | `type()` |
+|------|----------|
+| import / link 实体句柄（普通值，见 §11.3） | `"import"` / `"link"` |
+| AScript 的宿主句柄：`$fs_open` 流 / `$thd_create` 线程 | `"ostream"` / `"istream"` / `"thread"` |
+| 其余宿主句柄（如 link 模块自己包装的对象） | `"handle"` |
+| 空句柄（不持任何对象） | `"null"` |
+
+最多一个实参：`type(a, b)` → `ArgError`（且 `b` 不求值）；`type()` 无参答 `"null"`（与其他无参调用一致）。任何**作为值**的表达式都可作实参——`type(f())`、`type(a[0].b)`（callable 仍被拒，见下）。
+
+**函数不可当值**——读取（含 `type()` 的实参）直接被拒（`TypeError: function cannot be read as a value`），所以没有名字为它作答；要调用它（直接、经 `@`、或它所在表里的名字）。
+
+脚本层自己没有名字的东西——宿主交出的对象、脚本不建模的变体类型（只有宿主能传入：32 位 float、无符号整数、`std::vector<T>`）——先问宿主的类型命名回调（`engine::set_type_ex`，AScript 已装，给出上一张表的名字）；答空或未装回调 → `"unknown"`。`null` 值与空句柄都答 `"null"`，即**空读作 null、不是 "unknown"**。
+
+> `type`、`int`、`float`、`string`、`bool`、`bytes`、`vec`、`map`、`lst`、`env`、`here`、`eval`、`trap`、`yield` 均为保留字，不可用作变量名、函数名、参数名或 `as` 别名；`$xxx` 扩展函数名由宿主注册，不是保留字。
+
+## 5.4 JSON 编解码
+
+AScript 提供 `$io_tojs` / `$io_fmjs`（见 §9.1）：
+
+```js
+$io_tojs(v)          // → pretty JSON
+$io_tojs(v, true)    // → compact JSON
+$io_fmjs(s)          // JSON → value（失败返 null）
+```
+
+<div style="page-break-after: always;"></div>
+
+---
+
+# 6. 变量与访问
+
+## 6.1 var 声明（支持可选初始化）
+
+```js
+var x;               // 声明 x，初始化为 null
+var y = 42;          // 声明并初始化
+var a = 1, b, c = 3; // 混合：a=1, b=null, c=3
+```
+
+- `var` **强制在当前作用域新建变量**，名字已存在（变量/函数/命名空间）→ `NameError`
+- 初始化表达式可选：无 `=` → 默认 `null`；有 `=` → 右侧表达式求值后赋值
+- `var` 声明中每个名字独立决定是否初始化
+- `for (var i = 0; ...)` 和 `for (var x : expr)` 同样支持可选初始化
+
+```js
+var x;      // 声明（强制新建，检查冲突），x = null
+var y = 1;  // 声明并初始化，等价于 var y; y = 1;（但一次操作完成）
+```
+
+### 6.1a typed var 语法糖（类型关键字声明）
+
+8 种类型关键字可直接用作声明：
+
+```js
+int a;              // 声明并初始化为类型默认值：0
+int a = 42;         // 声明并初始化为指定值（类型转换）
+float b = 3.14;     // 浮点数
+string c = "hello"; // 字符串
+bool d = true;      // 布尔值
+bytes e;            // 空 bytes
+vec f;              // 空 vec
+map g;              // 空 map
+lst h;              // 空 lst
+```
+
+**类型默认值**：
+
+| 类型 | 默认值 |
+|------|--------|
+| `int` | `0` |
+| `float` | `0.0` |
+| `string` | `""` |
+| `bool` | `false` |
+| `bytes` | 空 bytes |
+| `vec` | `[]`（空 vec） |
+| `map` | `{}`（空 map） |
+| `lst` | `[]`（空 lst） |
+
+**for 循环中的 typed var**：
+
+```js
+for (int i = 0; i < 10; ++i) {}    // C 风格 for 循环
+for (int i; i < 10; ++i) {}        // 无初始化（默认值 0）
+for (int x : arr) {}               // for-each（默认值 0）
+for (int i = 0, j = 1; ...) {}     // 多变量声明（同一类型）
+```
+
+- 带初始化形式 desugar 为 `var` + 类型转换函数调用（`int a = 42;` → `var a = int(42)`）；不带初始化形式直接存类型默认值（`int a;` 与 `var a = int()` 等值）
+- `var` 声明和 typed var 声明不能混用：`var a, int b;` → 语法错误
+- 名称冲突规则与 `var` 完全一致
+
+- 不带 `var` 的 `x = 1`：优先赋值 — 沿定义链查找（§11.3），找到→赋值；找不到→`NameError`
+- **名称冲突规则**（`var`/`def`/`link`/`import` 统一检测）：
+
+| 先占据 ↓ \ 后声明 → | `var x` | `def x` | `link "..." as x` | `x = 1`（赋值） |
+|---------------------|---------|---------|-------------------|----------------|
+| `var x` | NameError | NameError | NameError | OK（重赋值） |
+| `def x` | NameError | NameError | NameError | NameError（`Cannot assign to function`） |
+| `link`/`import` `as x` | NameError | NameError | NameError | **OK——丢弃实例，值取而代之** |
+
+> 名字不存在时 `x = 1` → `NameError`（赋值不新建，新建用 `var`）。
+
+## 6.2 赋值与复合赋值
+
+`=` 是 expression 级运算符（优先级 2，右结合），所有赋值运算符均支持链式：
+
+```js
+x = 1;
+a = b = 42;  // 链式赋值：a = (b = 42)
+a += b += 2; // 复合赋值也可链：a += (b += 2)
+x += 2;      // x = x + 2
+x -= 3;      // x = x - 3
+x *= 4;      // x = x * 4
+x /= 2;      // x = x / 2
+x %= 3;      // x = x % 3
+x <<= 1;     // x = x << 1
+x >>= 1;     // x = x >> 1
+x &= 7;      // x = x & 7
+x |= 8;      // x = x | 8
+x ^= 3;      // x = x ^ 3
+x += "!";    // x = x + "!"  (string concat)
+v1 += v2;    // v1 = v1 + v2  (vec/lst concat)
+m1 += m2;    // m1 = m1 + m2  (map merge, right overwrites)
+```
+
+**赋值目标**：变量、成员访问、索引表达式或 `@()` 动态路径。目标合法性是**运行期**检查（解析器的 lvalue 检查，`=` 与复合赋值共用）：字面量或任意表达式 → `TypeError`；不存在的名字 → `NameError`（`Undefined: <name>`）；函数绑定不可赋值（`g = 5` → `NameError: Cannot assign to function`）；import/link 别名是普通值，赋值覆盖即丢弃实例、值取而代之。
+
+**复合赋值语义：**
+
+- **RHS 先求值，目标只解析一次**：`x += f()` 中 `f()` 在 `x` 被读**之前**运行，`f()` 对 `x` 的改动就是随后读到的值（C++17 `E1 op= E2` 的定序，与 `=` 一致）；`a[f()] += v` 只调用 `f()` 一次。
+- **`[null]`（append 索引）上的复合赋值 / `++` / `--` 是运行期 `TypeError`**：读是 size、写是 push，不是同一个位置。显式写法：`v[null] = 0; v[-1] += x;`。
+- **byte 元素与切片只接受 `=`**：`s[0] += 1`、`++s[0]`、`v[1, 3] += [1, 2]` 均为运行期 `TypeError`——byte 不是 variant 槽位、切片不是单个位置。显式读改写：`s[0] = s[0] + 1;`。
+
+## 6.3 [] 索引
+
+| 索引 | 语义 | 适用类型 |
+|------|------|---------|
+| `0` | 首元素（front），读+写 | vec / lst / string / bytes |
+| `-1` | 尾元素（back），读+写 | vec / lst / string / bytes |
+| `null` | 读→`size()` / 写→push_back（string/bytes 追加 1 字节） | 读：vec / lst / string / bytes / map；写：vec / lst / string / bytes |
+| `"key"` | 字典键，读+写 | map |
+
+**读 / 写 / 复合赋值行为：**
+
+| 类型 | 操作 | `0` | `-1` | `null` | 任意 `[i]` |
+|------|------|-----|------|--------|-----------|
+| vec | 读 / 写 | ✅ | ✅ | 读 size / 写 push | ✅ |
+| vec | 复合赋值 | ✅ | ✅ | ❌ 运行期 TypeError | ✅ |
+| lst | 读 / 写 | ✅ front | ✅ back | 读 size / 写 push | ✅ O(n) |
+| lst | 复合赋值 | ✅ | ✅ | ❌ 运行期 TypeError | ✅ O(n) |
+| string / bytes | 读 | ✅ byte 值 | ✅ 尾 byte | ✅ size（字节数） | ✅ |
+| string / bytes | 写 | ✅ byte 值 | ✅ 尾 byte | ✅ 追加 1 字节 | ✅ |
+| string / bytes | 复合赋值 | ❌ 运行期 TypeError | ❌ | ❌ | ❌ |
+| map | 读 | — | — | ✅ size（键数） | ✅ 仅字符串键 |
+| map | 写 | — | — | ❌ 运行期 TypeError | ✅ 仅字符串键 |
+
+> **`[null]` 规则**：size 语义只成立在**链的终端 + 读位置**，vec/lst/string/bytes/map 一致；标量父值（int 等上的 `n[null]`）→ `TypeError`。写位置 vec/lst/string/bytes 追加（byte 容器追加 1 字节），map → `TypeError`。非终端 `a[null].b` → `IndexError`；`delete a[null]` → `ConvError`。
+>
+> **string / bytes 的元素是它的 byte 值（int 0-255），读写一致**：读给出 int，写接受一个 int——先走普通整数转换，再按 0-255 回写策略（默认 wrap `& 0xFF`，`overflow_check` 下 `OverflowError`）。**先查位置后查值**：`s[5] = 300` 在 `overflow_check` 下报 `IndexError`（`[null]` 追加没有位置，先转换值）。byte 元素上的 `+=` / `++` 是运行期 `TypeError`（byte 不是 variant 槽位），写显式的 `s[0] = s[0] + 1`。`delete` 同样拒绝 byte 元素。
+>
+> map 键必须是字符串，非字符串（含 `null` 和数字）→ `TypeError`，不再静默转成 `""`。
+
+## 6.4 切片 `[from, to]` / `[from, to, step]`
+
+逗号分隔索引为切片操作，`[from, to)` 左闭右开，返回同类型新容器。
+
+```js
+var v = [0, 1, 2, 3, 4, 5];
+v[1, 4];         // [1, 2, 3]     — indices 1,2,3
+v[0, 6, 2];      // [0, 2, 4]     — step 2
+v[5, 1, -2];     // [5, 3]        — 反向，步长 -2
+v[-3, -1];       // [3, 4]        — 负索引
+v[2, null];      // [2, 3, 4, 5]  — null = size
+v[3, 3];         // []            — 空区间
+
+var l = lst[10, 20, 30, 40];
+l[1, 3];         // [20, 30]      — lst 切片返回 lst
+
+"hello world"[0, 5];  // "hello"   — string 切片
+"hello"[3, 0, -1];    // "lle"     — string 反向
+
+var o = map{"v": [1, 2, 3, 4]};
+o.v[1, 3];       // [2, 3]        — 链上切片，`o["v"][1, 3]` 等价
+
+// 切片赋值（同类型、个数匹配）
+v[1, 4] = [10, 20, 30];   // 位置 1,2,3 变成 10,20,30
+v[0, 6, 2] = [9:3];       // 构造的操作数：位置 0,2,4 变成 9
+v[5, 1, -2] = [50, 30];   // 反向步长按读的次序散布
+s = "hello"; s[1, 3] = "EL";  // → "hELlo"
+```
+
+| 语义 | 说明 |
+|------|------|
+| `from` / `to` | 整数表达式，可为负、可为 `null`(=size) |
+| `step` | 默认 1，负步长反向遍历 |
+| 越界 | IndexError（不 clamp） |
+| step=0 | ArgError |
+| 返回类型 | 同类型新容器（vec/lst/string/bytes），右值 |
+
+**切片赋值**（`=` 专用）：
+
+| 规则 | 说明 |
+|------|------|
+| 目标 | 已存在的线性容器（vec/lst/string/bytes）；右值基 → TypeError |
+| 操作数 | **同容器类型**，按读序散布（含负步长）；元素个数必须等于位置个数。标量等其余形式一律 TypeError，fill 要写出来：`v[1, 3] = [9:2]`、`l[1, 3] = lst([9:2])` |
+| 个数 | 必须精确相等，否则 ArgError |
+| 长度 | 不变：切片写是原位覆盖 |
+| 运算符 | 只接受 `=`：`v[1, 3] += [1, 2]`、`delete v[1, 3]` 均为运行期 TypeError |
+
+**索引补充：**
+
+```js
+var a = [10, 20, 30];
+$io_print(string(a[0]));     // 10
+$io_print(string(a[-1]));    // 30
+$io_print(string(a[null]));  // 3 — size
+
+a[null] = 99;      // push_back → [10, 20, 30, 99]
+
+"hello"[null];     // 5 — string 长度（字节数）
+"hello"[0];        // 104 — byte 值；string 元素是 int 0-255
+"hello"[-1];       // 111 — 尾 byte（[-2] 越界，只有 -1 表示 back）
+map{"k": 1}[null]; // 1 — map 键数
+```
+
+> **规则**：`null` 的 size/追加之分见 §6.3，仅在读的终端是 size。`a[null].b`（非终端）→ `IndexError`。`delete a[null]` → `ConvError`（null 索引禁止删除），用 `delete a[-1]` 删尾。
+>
+> dot 链内 `[]` 只接受字面量（整数/字符串/null）：`o.s[0]` / `o.s[-1]` 合法，`o.s[i]` 非法——需动态计算时，先拼路径字符串再用 `@(path)` 反射访问。独立索引 `a[i]`（非 dot 链）不受此限；逗号形式是例外——`o.v[1, 3]` 是以链为基的切片，边界可以是任意表达式。
+
+<div style="page-break-after: always;"></div>
+
+---
+
+# 7. 运算符
+
+## 7.1 算术
+
+```js
+a + b    // int/float 加法 / 字符串拼接 / 容器连接(map合并)
+a - b    // 减法
+a * b    // 乘法
+a / b    // 除法（除零 → DivZeroError，INT64_MIN/-1 → DivOverflowError）
+a % b    // 取模（仅 int，除零 → DivZeroError，INT64_MIN/-1 → DivOverflowError）
+```
+
+## 7.2 比较
+
+```js
+a == b   a != b
+a < b    a > b    a <= b   a >= b
+```
+
+- int↔float 自动互转后比较
+- 同类型 `==`/`!=` 直接比较（vec/lst/map 逐元素、bytes 逐字节）；有序比较（`<` `>` `<=` `>=`）只覆盖 int/float/string，其余类型 → `TypeError`
+- `null`：仅支持 `==`/`!=`（`null == null` → true，与其他 `==`/`!=` → false/true，不抛异常）；比较不做转换（`null == 0` → false；转换函数才把 null 映射为各类型默认值，§5.2），不支持有序比较（`<` `>` `<=` `>=` 抛 `TypeError`）
+- 跨类型（含 string↔number）无法比较 → `TypeError`
+
+## 7.3 逻辑
+
+```js
+a && b   // 短路：a 为 falsy 不求 b
+a || b   // 短路：a 为 truthy 不求 b
+!a       // 逻辑非
+```
+
+## 7.4 位运算
+
+```js
+a & b    // 位与
+a | b    // 位或
+a ^ b    // 位异或
+~a       // 位非
+a << b   // 左移
+a >> b   // 右移
+```
+
+仅 `int`。非 int → `TypeError`。移位越界或负值左移 → `ShiftError`（启用溢出检查时）。
+
+## 7.5 拼接与合并 + +=
+
+```js
+// 字符串拼接
+"hello " + "world"  // "hello world"
+x += "!"            // x = x + "!"  (string concat)
+
+// 数组/链表连接
+var a = [1, 2];
+var b = [3, 4];
+var c = a + b;      // [1, 2, 3, 4] (new vec)
+a += b;             // a = [1, 2, 3, 4] (in-place)
+
+var l1 = lst[1, 2];
+var l2 = lst[3, 4];
+l1 += l2;           // l1 = lst[1, 2, 3, 4]
+
+// map 合并
+var m1 = map{"a": 1};
+var m2 = map{"b": 2};
+var m3 = m1 + m2;   // map{"a": 1, "b": 2} (new map)
+m1 += m2;           // m1 = map{"a": 1, "b": 2}
+// 重复 key：右侧覆盖
+m1 += map{"a": 99}; // m1 = map{"a": 99, "b": 2}
+```
+
+同类型容器才允许 `+` / `+=`，否则 `TypeError`。map 合并时相同 key 的值被右侧（rhs）覆盖。
+
+## 7.6 三元条件 ?:
+
+```js
+var max = a > b ? a : b;
+```
+
+短路：条件 truthy 只求值 conseq，否则只求值 altern。
+
+## 7.7 自增自减
+
+```js
+++x    // 前置，返回新值
+--x    // 前置，返回新值
+x++    // 后置，返回旧值
+x--    // 后置，返回旧值
+```
+
+仅 int。非 int → `TypeError`。溢出 → `OverflowError`（启用溢出检查时）。
+
+**求值顺序**：二元运算符固定左→右求值，`++`/`--` 立刻写回变量，行为确定。
+
+```js
+var a;
+a = 0; a++ + ++a;  // → 2
+a = 0; ++a + a++;  // → 2
+a = 0; a++ + a++;  // → 1
+a = 0; ++a + ++a;  // → 3
+```
+
+> 与 C/C++ 不同，同一表达式内多次 `++`/`--` 同一变量**不是**未定义行为。
+
+## 7.8 类型检查规则
+
+| 类别 | 运算符 | 操作数要求 | 错误 |
+|------|--------|-----------|------|
+| 算术 | `+` `-` `*` | int/float（int 优先，失败转 float）| `TypeError` |
+| 算术 | `/` | 同上 + 除零检查 | `TypeError` `DivZeroError` `DivOverflowError` |
+| 算术 | `%` | 仅 int + 除零检查 | `TypeError` `DivZeroError` `DivOverflowError` |
+| 比较 | 全部 | null 特判 / 同类型 / int↔float；有序比较仅 int/float/string | `TypeError` |
+| 逻辑 | `&&` `\|\|` `!` `?:` | bool / int / float（0 / 0.0 = falsy） | `TypeError` |
+| 位运算 | `&` `\|` `^` `~` | 仅 int | `TypeError` |
+| 移位 | `<<` `>>` | 仅 int | `TypeError` |
+| 拼接 | `+` | string+string / vec+vec / lst+lst / map+map | `TypeError` |
+| 自增/减 | `++` `--` | 仅 int | `TypeError` |
+| 算术复合 | `+=` `-=` `*=` `/=` | 同算术（int/float）；`+=` 另支持 vec/lst 拼接、map 合并 | 同算术 |
+| 取模复合 | `%=` | 仅 int + 除零检查 | `TypeError` `DivZeroError` `DivOverflowError` |
+| 移位复合 | `<<=` `>>=` | 仅 int | `TypeError` |
+| 位运算复合 | `&=` `\|=` `^=` | 仅 int | `TypeError` |
+| bytes 比较 | `==` `!=` | bytes 同类型逐字节比较（不支持有序比较） | `TypeError` |
+| bytes 其余 | 所有其他运算符 | — | `TypeError` |
+
+<div style="page-break-after: always;"></div>
+
+---
+
+# 8. 语句
+
+## 8.1 if / else
+
+```js
+if (x > 0) {
+    $io_print("正\n");
+} else if (x < 0) {
+    $io_print("负\n");
+} else {
+    $io_print("零\n");
+}
+```
+
+## 8.2 for
+
+```js
+var i;
+for (i = 0; i < 10; ++i) {
+    $io_print("%1\n", i);
+}
+for (var j = 0; j < 5; ++j) {  // j scoped to loop
+    $io_print("%1\n", j);
+}
+for (;;) { break; }    // 无限循环（空条件 = true）
+```
+
+循环体隐式推帧，循环内 `var` 声明不泄漏到外层。每次迭代结束后 body 临时变量被清理。
+
+## 8.3 for-each
+
+```js
+var v;
+for (v : arr) { $io_print("%1\n", v); }
+for (var v : arr) { $io_print("%1\n", v); }
+// map 迭代元素为 {key, value}
+for (var kv : m) {
+    $io_print("%1: %2\n", kv.key, kv.value);
+}
+```
+
+- 仅 vec / lst / map 可迭代
+- 循环变量必须**已声明**或用 `var` 声明，否则 NameError（与普通赋值同规则）
+- map 迭代元素为 `{key, value}` map
+
+## 8.4 while
+
+```js
+while (n > 0) {
+    n = n - 1;
+}
+```
+
+## 8.5 switch
+
+```js
+switch (x) {
+    case 1:
+        $io_print("一\n");
+        break;
+    case 2:
+        $io_print("二\n");
+        break;
+    default:
+        $io_print("?\n");
+}
+```
+
+无 fall-through，每个 case 自带 break 语义。case 内的显式 `break` 等价于 switch 的 return——仅退出 switch，不传播到外层循环。switch 嵌套在循环中时，case 内 `break` 不会跳出外层循环。
+
+## 8.6 break / continue / return
+
+```js
+break;         // 跳出最内层循环或 switch
+continue;      // 跳到循环下一轮
+return;        // 返回 null
+return 1;      // 返回值
+```
+
+> `break` 在 switch 内等价于 switch return；在循环内跳出最内层循环。switch 嵌套在循环内时，两者不互相穿透。
+
+## 8.7 try / catch / throw
+
+```js
+try {
+    throw "error";
+} catch (e) {
+    $io_print("%1: %2\n", e.what, e.info);
+}
+```
+
+- `throw expr` → `RuntimeError`，`e = map{"what": "RuntimeError", "info": cov_string(expr)}`（info 恒为字符串，`throw 42` 得 `"42"`）。**throw 容器例外**：map 无法转字符串 → 实际抛 `ConvError`；vec/lst 按 §5.2 的 UTF-8 规则（全 int 编码码点 / 全 string 拼接）转换成功则照常 `RuntimeError`，混合或非法序列才 `ConvError`
+- 异常穿透 `def` 边界，沿调用栈向上
+- 未捕获异常终止脚本，自动打印调用栈
+- **声明期名称冲突**：`var`/`def` 名称冲突在函数体内可被 `try/catch` 捕获，但 try 会额外推帧，实际意义不大。`import/link as` 的名称冲突不可 catch（`as` 语法限定顶层，无法嵌入 `try` 块）。推荐做法：声明前先 `delete` 预清理，避免冲突。
+- **防御式 `delete .xxx`**：`delete` 是表达式（返回 `bool`），对不存在的名字静默返回 `false`。可在声明前先 `delete`，保证无冲突：
+
+```js
+delete .init;           // 静默——存在则删除，不存在也无所谓
+def init(x, y) { ... }  // 一定成功，不会因名称冲突被拦截
+```
+
+## 8.8 异常类型表
+
+| 类型 | 来源 |
+|------|------|
+| `RuntimeError` | `throw expr` |
+| `TypeError` | 对非 map 取 `.`、非容器取 `[i]`、比较类型不匹配等 |
+| `NameError` | 未定义变量、var↔namespace 冲突 |
+| `ConvError` | 类型转换失败 |
+| `DivZeroError` | `/` `%` 除数为 0 |
+| `DivOverflowError` | INT64_MIN / -1、INT64_MIN % -1 |
+| `OverflowError` | 整数算术溢出（启用溢出检查时） |
+| `ShiftError` | 移位越界或负值左移（启用溢出检查时） |
+| `IndexError` | vec/lst/string/bytes 索引越界 |
+| `KeyError` | `m["key"]` 键不存在、dot 链中间段不存在（链尾读 null，§13.2） |
+| `ArgError` | 参数缺省无默认值，或内建函数被多给实参（`env(a, b)`、`type(a, b)`、`vec(1, 2)`、`string(1, 16, 3)`）；多余实参永不求值 |
+| `ImportError` | 模块未找到/循环导入/链接库无法加载（`Cannot link: <path>`，加载器失败时附加载器原文）等 |
+| `LinkError` | 原生调用发生在任何 walk 之外（load/unload 入口点里） |
+| `StackError` | 调用帧数超 `max_stack` |
+| `ResourceError` | 资源限制——目前唯一来源是 `max_vecfill` 填充上限 |
+| `MemoryError` | 分配失败（`bytes` 抛出的 `bad_alloc` / `length_error`，引擎译为脚本可捕获的错误） |
+| `ParseError` | 语法/词法错误——编译期，或运行期由 `eval` / 间接调用抛出（可捕获） |
+| `NativeError` | 原生异常包装（资源类错误不在此列，见上） |
+| `NavError` | 反向导航超出模块树深度，或 `^` 超出激活深度（`^ exceeds activation depth`） |
+| `VersionError` | .axp 版本标记与引擎不匹配 |
+| `InterruptedError` | 宿主 hook 强制中断（不可捕获，脚本 try/catch 无法吞掉） |
+| `YieldError` | yield 服务（§9.6）：模块 init 中调用 `yield()`，或嵌套层数超过 `yield_nest`（都抛进脚本、可捕获，后者读作 `nested yield`）；或服务拒绝/终结投递（`no main fiber` / `yield full` / `expired` / `cleared` / `not executed` / 未捕获的 `nested yield`）——后者走各自投递的 future，不进脚本 |
+
+<div style="page-break-after: always;"></div>
+
+---
+
+# 9. 函数定义 + 扩展函数
+
+## 9.0 静态定义 $name（编译期常量）
+
+AScript 注册的静态定义：`$math_PI`、`$math_E`（数学常量），以及 `$etype`（宿主版本戳）与 `$vtype`（产物兼容级别）——后两者即 .axp 版本门用的两个戳。`$name` 不带括号即读取，编译期直接折叠为字面量，运行时零查表：
+
+```js
+$io_print(string($math_PI));      // → "3.141593"
+var r = $math_E + 1;              // 表达式任意位置可用（与字面量同规则）
+$math_PI * 2;                     // 6.283185307179586
+```
+
+规则：
+
+- 静态定义与扩展函数共用 `$` 命名空间，同名互斥——一个 `$name` 只有一个含义
+- 无括号 `$name` 查定义表，未命中即编译错误（`undefined static definition`；名字是扩展函数时同样编译错误，消息为 `extension function cannot be read as value`）——以上限正常编译路径，`eval` / `@` 内宿主表在解析期未知，未命中为运行期 `NameError`；带括号 `$name()` 只查扩展函数表
+- `$name` 是**值不是名字**：`$cfg_map.k` 不行，先 `var m = $cfg_map; m.k`；`$cfg_list[0]` / `$cfg_map["k"]` 索引可以
+- `@("$name")` 间接读取定义（快速路径）：未注册 → `NameError`；注册为扩展函数 → `TypeError`（可调用不可读）
+- 删除定义不影响已编译的 .axp（值已折叠进产物）
+
+## 9.1 扩展函数 $io_xxx（AScript 内置）
+
+输出到 stdout / 从 stdin 读 / 文件读写 / JSON 编解码。完整手册由程序提供：`AScript --doc`（全部）或 `AScript --doc <正则>`（按名过滤，如 `--doc '^io_'`）；只想看有哪些函数名用 `--toc [正则]`（一行一个，不含描述，约 300 token 列完全部）。以下为关键函数用法：
+
+**$io_print** — 输出：
+
+```js
+$io_print("hello");
+$io_print("%1 + %2 = %3", 1, 2, 3);  // 格式化
+$io_print($io_tojs([1, 2]));          // 容器→JSON→打印
+```
+
+**$io_print 格式规则（与单参数直接输出不同）：**
+
+- **单参数**：直接输出值（int/float/bool/string），**不做任何格式处理**——`%%` 原样保留
+- **多参数**：首参数为格式串，`%1` `%2` ... 对应后续参数（1-based），`%%` 输出字面 `%`
+
+```js
+$io_print("%1%%\n", 3);       // → 3%
+$io_print("100%% done\n");    // → 100%% done（单参数不处理格式）
+```
+
+- 容器（vec/map/lst）直接打印递归输出内容（如 `[1, 2, 3]`、`{a: 1}`）——需要 JSON 形式用 `$io_tojs`
+- 如需格式化后返回字符串（而非输出），用 `string(fmt, args...)`
+
+**$io_input()** — 从 stdin 读一行（EOF → `""`）；**$io_fread(path)** — 读文件返回 bytes；**$io_fwrite(path, content)** — 写文件（接受 bytes 或 string）；**$io_tojs(v, compact?)** — 值转 JSON 字符串（默认 pretty，compact=true 单行）；**$io_fmjs(s)** — JSON 字符串解析为值（失败返 null）。
+
+搭配 `$io_tojs` 可视化容器内容：
+
+```js
+var v = [1, 2, [3, 4]];
+$io_print("v: %1\n", $io_tojs(v));
+/*
+v: [
+	1,
+	2,
+	[
+		3,
+		4
+	]
+]
+*/
+
+// compact 单行
+$io_print("compact: %1\n", $io_tojs(v, true));
+
+var d = map{"a": 1, "b": map{"c": 2}};
+$io_print("d: %1\n", $io_tojs(d));
+/*
+d: {
+	"a": 1,
+	"b": {
+		"c": 2
+	}
+}
+*/
+```
+
+## 9.2 扩展函数 $sys_xxx / $math_xxx
+
+完整手册同样见 `AScript --doc`。以下为关键函数：
+
+**$sys_exec(cmd, timeout?)** — 执行外部命令，返回 `{output, excode, success}`：
+
+```js
+var r = $sys_exec("ls -l");
+$io_print("exit=%1\n", string(r.excode));
+
+var r2 = $sys_exec("sleep 2", 100);  // timeout ms
+```
+
+**$sys_datetime()** — 当前本地时间数字 map（单次快照）：
+
+```js
+var t = $sys_datetime();
+$io_print("%1-%2-%3 %4:%5:%6",
+    string(t.year), string(t.month), string(t.day),
+    string(t.h), string(t.m), string(t.s));
+```
+
+| 字段 | 类型 | 含义 |
+|------|------|------|
+| `year` | int | 年（如 2026） |
+| `month` | int | 月 1-12 |
+| `day` | int | 日 1-31 |
+| `h` | int | 时 0-23 |
+| `m` | int | 分 0-59 |
+| `s` | int | 秒 0-59 |
+| `ms` | int | 毫秒 0-999 |
+| `us` | int | 微秒 0-999999（与 `ms` 同一快照） |
+
+**$math_xxx 系列** — 数值运算，统一 **double 语义**（int 参数自动转 float，结果都是 float——显示为 `5.0` 而非 `5`），严格参数个数（1/2/3 参，非变参），参数非数字抛 TypeError、个数不符抛 ArgError：
+
+```js
+$math_abs(-5);          // 5.0
+$math_pow(2, 10);       // 1024.0
+$math_min(3, 1);        // 1.0（严格 2 参）
+$math_clamp(5, 0, 3);   // 3.0
+$math_sign(-9);         // -1.0
+$math_rad(180);         // pi
+```
+
+> 注意 `$math_abs` 返回 float；需要 int 时用 `int($math_abs(-5))`。函数名清单：`abs sqrt cbrt exp ln log2 log10 sin cos tan asin acos atan floor ceil round trunc sign rad deg`（1 参）、`min max pow atan2 hypot fmod`（2 参）、`clamp`（3 参），外加常量 `$math_PI` `$math_E`。
+
+**$sys_sleep(ms)** — 阻塞休眠：
+
+```js
+$sys_sleep(10);     // 休眠 10ms
+```
+
+`$sys_sleep(ms)` 阻塞引擎线程，期间投递不会被服务；需要 sleep 且继续受理投递（§9.6）用 `yield(ms)`。
+
+## 9.2b 容器操作 $vec_xxx / $lst_xxx / $map_xxx
+
+语言内建容器只有字面量、索引访问、切片与 `delete`；查找/排序/合并等操作由三个容器模块补齐。**协定：容器直接传引用**（变量直传，fwrap 可写视图，零拷贝）；变更类操作原地生效，不返回容器。实参求值遵循 §9.3 末尾取值语义。
+
+| 模块 | 函数 | 语义 |
+|------|------|------|
+| `$vec_` | `size(v)` | 元素数 → int |
+| | `find(v, val)` | 首个匹配索引 → int，无 → -1（int/float/string/bool 同型比较） |
+| | `has(v, val)` | 是否包含 → bool |
+| | `insert(v, pos, val)` | 插入（pos clamp 到 [0, size]） |
+| | `remove(v, pos)` | 删除（越界无操作） |
+| | `sort(v, desc?)` | 原地排序（int/float/string；desc 默认 false） |
+| | `reverse(v)` | 原地反转 |
+| | `merge(v, other)` | 追加另一个 vec/lst；自合并复制加倍 |
+| `$lst_` | `size / find / has / insert / remove / merge` | 同 $vec_（无 sort/reverse，链式排序无意义） |
+| `$map_` | `keys(d)` | 键列表 → vec |
+| | `values(d)` | 值列表 → vec |
+| | `has(d, key)` | 含键 → bool（**唯一安全判断**——`d["key"]` 读不存在键抛 KeyError；链尾点号读缺键为 null，§13.2） |
+| | `get(d, key, default?)` | 取值；键缺省返回 default（缺省则 null），不抛 |
+| | `size(d)` | 键数 → int |
+| | `insert(d, key, val)` | 设键值（等价 `d[key]=val`） |
+| | `remove(d, key)` | 删键（缺省无操作） |
+| | `merge(d, other)` | 合并另一 map，后键覆盖；自合并无操作 |
+
+错误语义：容器实参缺省（越界）→ `IndexError`；容器类型不符 → `TypeError`；只有函数自带显式参数检查（如 `$vec_find(v)` 缺值、`$vec_insert` 缺位）才抛 `ArgError`。查询语义失败（find 无匹配、get 键缺省）返回 -1 / default / null。
+
+```js
+var v = [3, 1, 2];
+$vec_sort(v);          // v → [1, 2, 3]
+$vec_sort(v, true);    // v → [3, 2, 1]
+$vec_insert(v, 1, 99); // v → [3, 99, 2, 1]
+$vec_has(v, 99);       // true
+$vec_merge(v, v);      // 自合并：元素翻倍
+var d = map{"a": 1};
+$map_get(d, "a");      // 1
+$map_get(d, "x", -1);  // -1（键缺省不抛）
+$map_keys(d);          // ["a"]
+```
+
+## 9.2c 事件投递 $evt_xxx
+
+`$evt_after(ms, name, args...)` 把一次对根作用域 `def` 的调用排进引擎的 yield 队列，脚本在下一个 `yield()` 点服务它（§9.6）。`ms = 0` 就是立即入队；`ms > 0` 时投递不早于该延迟可服务，放行由引擎心跳（约 50ms 周期）完成，实际启动延迟不超过约一个周期。优先级固定为 0。
+
+```js
+def on_tick(n) {
+    $io_print("tick %1\n", string(n));
+}
+
+$evt_after(0, "on_tick", 1);      // 立即入队
+$evt_after(500, "on_tick", 2);    // 500ms 后才可服务
+
+while (true) { yield(1000); }     // 唯一服务点
+```
+
+- 返回 `bool`：`true` = 已入队，`false` = 队列满（`yield full`）被拒
+- `name` 在服务时才解析：后定义的 def 合法；不存在 → `NameError` 进投递自己的 future，脚本不可见
+- handler 的返回值与错误都进投递的 future，脚本侧看不到；未捕获的错误宿主仍会从 `on_cerr` 收到；handler 出错不会影响主脚本
+- `args` 按值传入；含句柄时，投递持有它直到服务完成
+- 周期定时用自排模式：handler 末尾再调一次 `$evt_after(ms, ...)`，形成固定延迟循环
+- 队列满时无需清理接口：脚本多 `yield()` 一会即可把队列排空
+
+## 9.3 def
+
+```js
+def add(a, b = 1) {
+    return a + b;
+}
+add(3);     // 4
+add(3, 2);  // 5
+
+// 闭包
+def outer() {
+    var x = 10;
+    def inner() { return x; }
+    return inner();
+}
+```
+
+- 参数缺省无默认值 → `ArgError`
+- **调用次序**：实参按左到右求值（副作用次序确定），之后才跑被调方路径表达式、最后取地址——取址到调用之间不跑脚本代码，所以 `m.f(delete m)` 这类"实参丢弃被调方宿主"的形态干净报错；变量实参在**全部实参表达式求值完成后**统一读取（后位副作用对前置变量可见）：`f(x, x = 5)` 传入 `5`
+- **函数不可当值**：任何一次拷贝都被类型本身拒绝（`TypeError: function cannot be read as a value`）——绑定、容器、传给调用的表达式、def 形参、`type()` 实参一律如此；要调用就直接调（直接、`@`、或它所在表里的名字）。唯一的通道是**按引用、不按拷贝**：`$`/link 原生接受裸名实参为槽位指针
+- 调用目标是**求值表达式**且结果不可调用 → `NameError: not a function: <type>`；调用找不到函数 → `NameError: Undefined function: <name>`。点链调用里名字作为**数据**存在时改报 `not a function: <type>`；裸名调用只查函数，保持 `Undefined function`
+- 尾调用优化（TCO）：`return f(args)` 且 `f` 为当前函数名时，复用当前帧，不限深度（名字被局部遮蔽时不适用，见 §9.3.1）
+- `delete funcName` 删除当前层声明的函数定义（模块顶层；帧自己声明的 `def` 正常删除，更高层声明的一律 `false`）
+
+### 9.3.1 尾递归
+
+支持 TCO。`return <函数名>(args)` 且函数名为当前函数时复用当前帧——不推新帧、不增长调用栈。
+
+```
+def countdown(n) {
+    if (n <= 0) { return 0; }
+    return countdown(n - 1);   // tail call — no new frame
+}
+countdown(50000);  // OK, 不爆栈
+
+// 尾递归版 fib
+def fib_tail(n, a, b) {
+    if (n <= 1) { return b; }
+    return fib_tail(n - 1, b, a + b);  // tail call
+}
+```
+
+约束：
+- 不支持互递归 TCO
+- 函数名被局部遮蔽（`var f` / 参数 `f`）时**不构成自尾调用**：`return f(args)` 按当前绑定解析，绑定到可调用就调用它，不可调用报 `NameError`（与语句式 `f(args)` 一致）
+
+### 9.3.2 参数展开 `expr[]`
+
+调用函数时，`expr[]` 将容器展开为参数。**仅允许在最后一个参数位置**。
+
+- **vec / lst**：顺序展开，逐位填入
+- **map**：按 key 名匹配形参名
+
+```js
+def add3(a, b, c) { return a + b + c; }
+
+var v = [1, 2, 3];
+add3(v[]);              // → add3(1, 2, 3)
+add3([10, 20, 30][]);   // → add3(10, 20, 30)（展开必须是最后一个参数）
+
+var lst_v = lst[4, 5, 6];
+add3(lst_v[]);        // → add3(4, 5, 6)
+
+// map[]: 按键名匹配形参
+def display(name, age) {
+    $io_print("%1 is %2\n", name, age);
+}
+// map[]: 按键名匹配形参
+display(map{"age": 30, "name": "Alice"}[]);
+
+// map[] 配合默认值：只覆盖需要的参数
+def greet(who, times) {
+    return who + "x" + string(times);
+}
+greet("?", map{"times": 3}[]);   // who="?"（位置实参），times=3（map 补参）
+```
+
+约束：
+- `[]` 必须紧跟在一个参数表达式后面，且必须是最后一个参数（否则 parse error）
+- 展开元素多于形参 → 多余元素静默忽略
+- 展开元素为零个匹配 → `ArgError`
+- 非 vec/lst/map 类型展开 → `TypeError`
+
+## 9.4 here — 源码位置常量
+
+`here()` 返回**编译期常量**：调用点自身的源码位置，编译期即定型，运行时零开销。
+
+```js
+var p = here();
+p["row"]    // 1-based 行号
+p["col"]    // 1-based 列号
+p["ofst"]   // 0-based 字节偏移
+p["file"]   // 绝对路径（无文件上下文时为空串）
+```
+
+- 仅函数形式 `here()`，裸 `here` 是语法错误（保留字）
+- 位置是 `here()` 所在的源码位置：写在函数体内 → 函数体行；写在调用处 → 调用处行
+- `file` 为编译期绝对路径，import 模块各自带自己的文件路径；仅目录上下文（直接传 home_dir 执行时）返回目录路径
+- `row`/`col` 按字符计（tab 缩进按 1 字符，非视觉列）
+- 典型用途：脚本级 assert / 日志 / 自定义异常自带调用点位置
+
+```js
+def assert(cond, mesg, pos) {
+    if (!(cond))
+        throw "AssertError: " + mesg + " @ " + pos.file + ":" + string(pos.row) + ":" + string(pos.col);
+}
+assert(x > 10, "x too small: " + string(x), here());
+```
+
+## 9.5 trap — 显式断点插桩
+
+`trap()` 是调试断点插桩：调用时唤起执行钩子，携带调用点位置与可选参数数据。**未挂 hook 时是 no-op**（一次原子判空，脚本正常运行）——生产代码插桩零影响。无 hook 时**不求值任何表达式**（副作用零影响）。
+
+```js
+trap();              // info = {here: 位置 map}
+trap(args_expr);     // 单参数：求值作为 args 传入，无条件触发
+trap(cond_expr, args_expr);  // 双参数：cond_expr falsy 则跳过（args_expr 不求值）；truthy 触发
+```
+
+- 仅函数形式 `trap()` / `trap(args_expr)` / `trap(cond_expr, args_expr)`，裸 `trap` 是语法错误（保留字）
+- 参数最多 2 个（>2 编译期错误）；`here` 键恒在，`args` 键有参才有
+- 双参数时第一个为条件（`to_bool_strict`），falsy 则跳过且不求值第二个表达式
+- 每次触发都调用 hook 事件；hook 返回 false → 执行中断（`InterruptedError`，不可捕获）
+- AScript 中默认挂载 trap 打印（`--no-hook` 关闭），输出位置 + 参数 + 调用栈 + 各帧局部变量：
+
+```js
+def f(a) { var y = a + 1; trap(y > 1); return y; }
+f(1);
+```
+
+```text
+[trap] /tmp/t.axc:1:27  arg=true
+    at ::f  {a=1, y=2}
+```
+
+## 9.6 yield — 服务点
+
+`yield()` **就是 yield**——协程语言里同一个概念，区别只在于让出的对象是 **C++ 层（宿主）**，不是调度器。脚本在让出点暂停，宿主获得一个有界窗口来运行它排队的调用（`engine::yield` / `fwrap::currying` 句柄），然后控制权回到下一条语句。在此之前宿主代码只能在整次 `exec()`/`call()` 结束后进入；有了让出点，脚本自愿把执行权借出去一段时间。这也是投递**唯一**能运行的位置：两次 `yield()` 之间脚本是普通顺序代码，任何东西都插不进去。
+
+窗口里运行的是**脚本，不是任意 C++**：每个投递都是对根作用域 `def` 的调用，与普通调用执行方式相同。机制服务于反方向的交互——C++ 层的原生线程把调用交给脚本的时间线：请求进队列，只在脚本自己 yield 时运行。
+
+时间窗口会持续受理到达的投递，所以 `yield(n)` 同时是脚本的 **sleep**——睡 `n` ms：脚本在等待中度过窗口，宿主的排队调用在等待期间被服务而不是被阻塞。无论有没有投递到达，窗口都会走满——空队列时它就是普通 sleep。
+
+```js
+yield();           // 排空待处理投递，立即返回
+yield(ms);         // 驻留窗口：排空后继续等待到达，直到 ms 到期
+yield(ms, maxcnt); // 服务满 maxcnt 个投递也提前返回
+```
+
+- 返回本次服务掉的投递数（被服务调用失败也计数——错误进了它自己的 future）
+- `(0, 0)` 是一次非阻塞单遍，`(0, n)` 到 n 即停；`ms > 0` 时窗口内到达的投递照常被服务，空队列则睡到截止时间，`n` 可提前短路；**过截止时间后不再受理新投递，在途的那个跑完**
+- 被服务的调用以根姿态运行：能看到根变量与模块，**看不到**调用方的局部变量或执行位置；`max_stack` 是它自己的根预算，期间 hook 事件与中断照常触发
+- **模块 init 期间**（`import`/`link` 体内）调用 `yield()` 抛脚本层 `YieldError`——init 发生在引擎服务点存在之前
+- **serviced call 内**可以再调 `yield()`（Qt `processEvents` 模式）：调用方的栈保留，其他 handler 在它上面运行；嵌套层数由 `yield_nest` 限制（最外层算一层，默认 64，0 = 不限），超过上限才抛脚本层 `YieldError`（`nested yield`）——该调用可以捕获，不捕获则这次调用以 `YieldError` 结束并进入它投递的 future，主脚本不受影响
+- 中断与别处一致：唤醒等待，不产生值，本次 run 以 `InterruptedError` 返回；排队中的投递同样以 `InterruptedError` 结算（有 hook 拒绝理由时，理由即值）
+
+<div style="page-break-after: always;"></div>
+
+---
+
+# 10. 反射
+
+对**已存在**的变量/函数做间接操作：读、写、删、调。`@name` / `@(expr)` 的 `name`/`expr` 求值结果必须为 `string`，用于运行时确定目标名。
+
+声明位置（`var`/`def`/`import as`/`link as`）**禁止** `@`，名字必须编译期确定。
+
+- **`@var`**：`var` 必须是已定义变量，值为 `string`。取值后作为目标名使用。
+- **`@(expr)`**：`expr` 求值结果必须为 `string`。支持任意运行时表达式。
+- 字符串必须是**合法标识符**（简单名）或**路径字符串**（含 `.` / `[N]`，如 `"a.b[0]"`）。
+- 非 string → `TypeError`，目标不存在 → `NameError`，namespace 误读写 → `TypeError`。
+
+## 10.1 引用反射 `@`
+
+对**已存在**的变量/函数做间接操作：读、写、删、调。`@` 是语言的**指针替代品**：字符串被解析成一个**对象别名**——对已存在对象的引用。声明位（`var`/`def`/`import as`/`link as`）里 `@` 被禁止，名字必须编译期固定。
+
+```
+var x = "y";
+var y = 42;
+
+// 读 / 写 / 复合 / 自增自减 / 删除
+$io_print(string(@x));  // 42（读 y）
+@x = 5;          // 写 y
+@x += 1;         // y += 1
+++@x;            // 自增
+delete @x;       // 删除 y
+
+// 调用 — 字符串可含 . 做 namespace 导航（目标模块需已 import/link 到该名字下）
+var fn = "f";
+@fn();           // 调用 f()
+var fn2 = "math.abs";
+@fn2(-5);        // 带路径调用；math 未 import/link 时 → NameError: Undefined: math
+
+// @(expr) 支持任意表达式
+@("arr[0]") = 99;           // 路径字符串含索引
+@(fn)();                    // 表达式间接调用
+```
+
+函数名即字符串——要间接引用函数，用字符串值存储函数名，再通过 `@` 调用：
+
+```js
+def add(a, b) { return a + b; }
+def mul(a, b) { return a * b; }
+
+var ops = map{"+": "add", "*": "mul"};   // 函数名就是字符串
+var op = ops["+"];
+$io_print(string(@op(3, 4)));  // → 7  (调用 add)
+
+op = ops["*"];
+$io_print(string(@op(3, 4)));  // → 12 (调用 mul)
+```
+
+**扩展函数**：名字字符串以 `$` 开头即扩展函数引用，`@` 直接查 extend 表（快速路径，不做源码重解析）：
+
+```js
+@("$io_print")("hello");     // 调用 $io_print
+var n = "$io_print";
+@(n)("computed name");       // 表达式字符串同样生效
+```
+
+约束与扩展函数一致：只可调用不可取值（`@("$io_print")` 不带括号 → TypeError）；名字字符串编译期不校验，未注册 → 运行期 NameError。
+
+**名字串的约束**：必须是**合法标识符**（裸名）或**路径串**（含 `.` / `[N]`，如 `"a.b[0]"`；可用激活锚开头——`"^x"`、`"^^x"`、`"^m.a"`，§13.3）——两者都指一个已存在的对象。**其他形态不指对象**：可解析但不是链的表达式/调用 → `NameError: reflection is not a legal name or chain: <string>`；连解析都失败的串（切片 `"a[0:1]"`、含空格等）→ `ParseError: Cannot parse path`；调用口的非法路径 → `NameError: Indirect call: invalid path '<string>'`。求值源代码是 `eval` 的职责，不是 `@` 的。非字符串 → `TypeError`（调用口报 `NameError`）；目标不存在 → `NameError`。
+
+**约束**：
+
+- `@a.b` 求值 dot 链并把**它的值**当作目标名（等同 `@(a.b)`）；编译错误只发生在对字面 dot 链取调用时（`@a.b(...)`）
+- `@` 把 dot 链当作名字表达式，但 `[]` / `++` / `--` 作用于解析出的对象：`@name[0]` ≡ `(@name)[0]`（写进该名字指向的变量），`@n++` 递增该变量——不是 `@(name[0])` / `@(n++)`
+- 间接调用不触发 TCO（编译期无法判定自递归）
+- `for-each`、`catch`、函数参数不适用 `@`（这些是引入新名字的固定语法）
+- **避免在循环内通过 `@` 修改目标名字符串**：`for` 体内若改了 `@i` 所依赖的变量值，循环变量绑定将不可控，类似`goto`（语法不禁止，但强烈不建议）。
+
+## 10.2 代码反射 eval
+
+`eval(str)` 把字符串当作代码执行——代码级反射，与 `@`（名字级）互补：`@` 操作已存在的名字，eval 创造新代码。二者合成递归反射：代码可存进 map、被脚本改写、再执行，执行中又可 `@` 分发。
+
+```js
+eval("1+1;");                    // 2 —— 末语句值
+eval("return 42;");              // 42 —— return 短路
+eval("var t = 10; t * 2;");      // 20 —— 多语句，返回末值
+eval("");                        // null
+```
+
+- **函数形态**，`eval` 是保留字：`eval(str)` 或 `eval(str, map)`
+- `str` 是任意表达式，运行期求值必须为字符串
+- 可选第二参 `map`：**具名参数**，键名直接成为代码内可用的名字
+- 第三参 → `ArgError`；字符串里的 `import`/`link` → `ParseError`——它们是顶层语句，而 eval 体是代码块
+
+```js
+eval("a + b;", map{"a": 1, "b": 2});    // 3
+var a = 100;
+eval("a;", map{"a": 1});                // 1 —— 参数遮蔽外层同名
+```
+
+- **作用域**：代码读取它被调用处的激活以及该 callable 的定义链（与普通名字同一规则），可写透外层同名变量；看不到调用者的调用者。`var`/`def` 声明只在本代码块内有效，执行完即消失
+
+```js
+var x = 10;
+eval("x + 1;");                 // 11 —— 读外层
+eval("x = 99; x;");             // 99 —— 写透外层，x 变为 99
+eval("def g(a) { return a; } g(1);");  // 1 —— def 只在本次执行内有效
+```
+
+- **多层 eval**：代码内可再拼新字符串并执行（递归反射）
+
+```js
+var s = "1+1;";
+eval("return eval(s) * 2;");    // 4
+var gen = "var t = \"3*3;\"; return eval(t) + 1;";
+eval(gen);                      // 10 —— 生成代码再生成代码
+```
+
+- **错误**：字符串语法错误 → `ParseError`，可被 try/catch 捕获；代码内运行期错误沿既有异常路径
+- **与 `@` 组合**：eval 串内可用 `@` 做动态分发（`eval("return @(fn)(21);")`）
+- **TCO**：eval 代码内定义的具名函数的自我递归照常尾递归；eval 本身不参与尾递归
+- **`here()`**：eval 串内返回字符串内部的位置（`file` 为空）；需要调用点位置时显式传入命名参数：`eval(str, map{"pos": here()})`（键名别用 `here`——eval 代码里它是保留字，只能经 `@("here")` 读）
+
+<div style="page-break-after: always;"></div>
+
+---
+
+# 11. import + 作用域 + env
+
+## 11.1 import
+
+```js
+import "math.axc" as math;    // 源码
+import "math.axp" as math;    // 编译码
+```
+
+- `as NAME` 强制，缺失即语法错误
+- 仅顶层出现
+- 别名冲突（同模块内已存在同名 var/def/link/import）→ `NameError`
+- 同模块多次 import（不同 alias）合法：共享 def，数据隔离
+- 首次执行 body，后续跳过执行直接拷贝初始状态
+- 编译期可选 embed（`-c --embed`，见 §11.5）：import 在编译期递归解析嵌入；embed 模式下 link/env() 编译报错，import 解析不到编译报错，环 import 编译报错，import 的 .axp 必须无未解决依赖清单。产物自包含
+- `delete aliasName` 删除 import 命名空间（模块顶层；帧内对模块级别名 delete 返回 `false`——帧自己声明的别名，含 `eval` 体里的，是帧自己的变量，正常删除），删除后可重新 import
+- 跨模块变量只允许读写，不可新建或删除
+- **别名是普通值**：`var x = p1` 复制实例（只复制数据，fly 与资源共享）；`p1 = 值` 丢弃实例、值取而代之；import 实例的副本其 areas 重指向副本，方法不会碰到原实例的宿主对象
+
+**import 用作 class 模式**：`as` 即实例化，模块即类。模块 body 跑一次作为模板，每个 `as` 得到独立模块实例。可以写 `init()` 方法和各种成员方法：
+
+```js
+// point.axc
+var px = 0;            // 模块 body 变量 = 实例成员（存在模块持久数据中）
+var py = 0;
+
+def init(x, y) {       // "构造函数" — 赋值沿用 var 声明的模块变量
+    px = x;
+    py = y;
+}
+def len() {
+    return px * px + py * py;
+}
+```
+
+```js
+// 使用
+import "point.axc" as p1;
+import "point.axc" as p2;
+p1.init(3, 4);         // p1 模块中 px=3, py=4
+p2.init(5, 6);         // p2 模块中 px=5, py=6
+$io_print(string(p1.len()));  // 25
+$io_print(string(p2.len()));  // 61 — 数据隔离
+```
+
+**实例可以放进容器**：容器像绑定一样持有**复制出来的实例**——每一次交接都复制（实参、返回值、容器字面量/元素、`@("alias")`），所以实例容器就是**对象数组**。要用就把元素**取出来**放进绑定（容器元素不就地接 dot 链）：
+
+```js
+var ps = [p1, p2];     // 两个独立实例
+var q = ps[0];         // 取出——q 是完整对象：成员与方法都在
+q.init(1, 1);          // 方法作用于副本自己的存储
+```
+
+## 11.2 命名空间访问
+
+```js
+import "math.axc" as math;
+math.add(1, 2);       // 调用 math 的 add
+
+b.ex.size(v);
+```
+
+## 11.3 作用域规则
+
+- **变量查找**：当前激活的帧 → 外层 callable 的声明帧（函数调用帧是边界：查找继续在该 callable 被声明处的帧进行，绝不回到调用者的帧）→ 实体的持久 `m_map`。block/循环/catch/eval 帧透明；兜底是运行中 callable 自己的模块。激活锚 `^`（§13.3）把查找起点移到声明它的激活——访问被遮蔽外层名的非破坏性途径（不删除任何东西，本地遮蔽保留）
+- **模块隔离**：不同 `import`/`link` alias 创建独立模块，变量不互通
+- **帧**：block / 函数调用 / for / while / for-each 创建新帧，退出回滚。模块顶层无帧
+- **dot 链跨模块**：定位 dot（`.` / `..` / `::`）只让链的**终止 key** 在目标实体解析——中间段仍先走运行中激活的定义链（所以 `.m.k` 能找到帧里的 `m`，模块值语义隔离）——调用同样如此：`.g()` / `::g()` 到达该实体的函数，即使帧里声明了同名 `def` 或变量；只有不带前缀的 `g()` 能看到帧里的同名声明
+
+## 11.4 env
+
+```js
+env([".", "/usr/lib/alexis"]);   // 设置当前模块搜索路径
+var paths = ["./mods"];
+env(paths);                       // 支持变量
+env(lst[".", "/usr/lib/alexis"]); // lst 字符串同样接受
+var saved = env();                // 无参：读回列表（vec）——之后 env(saved) 可恢复
+```
+
+实参一次只接受一个（多给 → `ArgError`），可为 `vec` 或元素全为 string 的 `lst`；其他情况（非容器、非字符串元素）→ `TypeError`，模块列表保持原样（替换列表旁路构建、整体提交）。**空字符串**条目 → `ConvError`。不存在的条目按原样保留（不 canonicalize），POSIX 根 `/` 也按原样保留（它 canonicalize 为空串）。`env()` 只读回模块**自己**这一层：宿主 `set_search_paths` 列表与 CWD 兜底不在其中，所以往返恢复的就是脚本设置的那份。**写入落在哪一层**：模块顶层的调用写入模板，之后创建的每个实例都从该列表开始；函数/方法内的调用只写该实例的列表。
+
+路径解析（运行时）：绝对路径直查 → 当前模块 env 列表按序（**未调用 env() 时默认 `["."]`：根模块 = 主脚本所在目录，子模块 = 模块文件自身所在目录**；`env(vec)`/`env(lst)` 替换列表，`env([])` 清空，`env()` 无参返回列表 `vec` 且不改变它）→ AScript `-p` 添加的全局路径 → 无条件回落进程 CWD。无其他 fallback。存在的路径会 canonicalize（realpath：解析符号链接、归一化 `..`/`.`）——同一文件的不同拼法共享同一个模块实例；尚不存在的路径按原样保留。宿主若需沙箱隔离应限制 search paths。
+
+## 11.5 embed
+
+`AScript -c --embed file.axc` 把**纯 .axc 工程**（主脚本 + 相对 import 的模块树）编译为**单个自包含 .axp**：所有可达模块在编译期递归解析并嵌入。产物拷贝到任何机器直接 `-x` 运行，运行时零文件依赖、零路径解析。
+
+使用约束（embed 模式违反即编译报错）：
+
+- **import 路径**：绝对路径，或相对**模块文件所在目录**（`"."` 规则）。不查 env、不查搜索路径、无 CWD 兜底——解析不到就是编译错误
+- **禁止 link**（dlopen 动态库无法打包）
+- **禁止 env()**（嵌入与 env 无关；env 是运行期机制）
+- **禁止环 import**（A→B→A 编译报错；DAG 内多路径引用同一模块合法，只嵌一份）
+- **import 已编译 .axp**：其依赖清单必须为空（否则报错）——只有 embed 编译的自包含 .axp 可以被嵌
+- 模块顶层可以调用 env()/link 的**旧 .axc** 无法 embed 编译，需先改造
+
+```bash
+AScript -c --embed main.axc     # → main.axp（自包含）
+AScript -x main.axp             # 拷到任何机器可跑，无需源树
+```
+
+<div style="page-break-after: always;"></div>
+
+---
+
+# 12. link
+
+## 12.1 link 语法
+
+```js
+link "mylib.so" as mylib;
+```
+
+- `as NAME` 强制，仅顶层
+- 别名冲突（同模块内已存在同名 var/def/link/import）→ `NameError`
+- `delete aliasName` 删除 link 实例（fly 释放，**镜像保持加载**；模块顶层；帧内对模块级别名返回 `false`，帧自己声明的别名照常删除），删除后可重新 link
+- 多次 link 同 .so（不同 alias）各自独立实例；多引擎并行 link 同一库时共享镜像，实例按引擎独立。镜像按进程的“引擎种群”加载一次，只有进程最后一个引擎销毁后才重新 dlopen（热重载）
+- 四个 link ABI 入口均为可选：`alexis_script_load`（每个引擎的这次 link 一次，构建模板；dlopen 本身进程级共享）、`alexis_script_create`（每个实例一次）、`alexis_script_release`（实例销毁时）、`alexis_script_unload`（每个引擎的这次 link 一次，在最后一个实例释放时；镜像本身在进程最后一个引擎销毁时才卸载）
+- 加载失败 → 脚本侧 `ImportError: Cannot link: <path>`，失败来自加载器时附加载器原文（`<detail>`）；路径解析不到时无 detail
+- 别名是**普通值**：`var b2 = b` 复制实例——克隆实例的 store 并**在副本上重跑 `create`**，所以 `create` 必须接受一个已填充的 store，数据必须可拷贝（或 `make_ref` 持有）；副本的 areas 重指向副本，方法不碰原实例的宿主对象
+- 脚本层只能访问 link 注册的函数，不可访问内部数据（屏蔽规则与例外见 §13.4）
+
+<div style="page-break-after: always;"></div>
+
+---
+
+# 13. dot 链
+
+dot 链是统一的访问模型。普通 dot（`a.b.c`）是定位段为空的子集。定位 dot（`..a.b.(c.d)`）通过 `.(...)` 桥分两段：定位段走模块树，桥内走数据访问。
+
+第 6 章介绍了 `var` 声明、赋值和 `[]` 索引。第 11–12 章介绍了 `import` 和 `link`——`import` 创建子**模块**，`link` 挂载原生库到模块下。根脚本自身也是一个模块。模块之间构成树：
+
+## 13.1 模块树
+
+```
+[根脚本]
+ ├── import "math.axc" as math    // 子模块
+ │    └── import "util.axc" as util   // 孙子模块
+ ├── link "base.so" as base
+ └── import "geom.axc" as geom    // 另一个子模块
+```
+
+每个**模块**（import 创建的）拥有独立的作用域（变量、函数、子模块、link 引用）。link 挂载在模块下，提供 native 函数和 area 命名空间，但不是模块——它不能包含子模块或变量作用域。根模块是 `::` 的跳转目标，父模块是 `..` 的跳转目标。
+
+## 13.2 dot 链
+
+`a.b.c` 在表达式层展平为链。每段 key 的查找顺序：
+
+1. **变量**：按 §11.3 的定义链查找——当前激活的帧 → 外层 callable 的声明帧 → 当前模块的 `m_store`
+2. **子模块**：当前模块的直接 `import` / `link` 子节点
+3. **link 命名空间**：不可当变量读 → `TypeError`
+
+### 数据取值
+
+如果 key 解析到变量且变量是容器（map/vec/lst），后续 key 走数据取值：
+
+```js
+var d = map{"a": map{"b": 42}};
+d.a.b              // 42 — "d" 是变量（map），后续 key 取数据
+d.a.b = 99;        // 写
+d.a.newKey = 88;   // 链尾 key 不存在 → 新建
+```
+
+- 读：链尾 key 不存在 → 返回 `null`
+- 写：仅**链尾** key 允许不存在 → 自动新建；中间任意段不存在 → `KeyError`
+- **定名约束**：链中间元素必须**定名**——变量或导航 token（`.`/`..`/`::`）。计算值（函数调用结果等临时量）不支持 `.` 级联，用 `[]` 索引：
+
+```js
+def f() { return map{"a": 42}; }
+f().a              // 不支持
+f()["a"]           // 42 — 计算值用 [] 取值
+var x = f();
+x.a                // 42 — 先存变量，变量链正常
+```
+
+### 模块导航
+
+如果 key 按定义链（§11.3）找不到同名变量，则检查子模块：
+
+```js
+import "math.axc" as math;
+math.add(1, 2);    // → 子模块 math 的 add
+```
+
+- **变量遮挡**：若当前帧有 `var math`，则优先取变量，子模块 `math` 不可达
+- dot 链只能**下钻**到直接子模块，不能上行或跳到根——这些用定位 dot（§13.3）
+
+### 函数调用
+
+`a.b(args)` 在当前模块查找函数 `a` → 找不到则检查 link 模块 → `NameError`。`a.b.f(args)` 先定位 `a.b`（模块或变量），再在目标模块中查函数 `f`。
+
+- 点链调用中，名字存在但**不可调用**（含容器元素）→ `not a function: <type>`；名字**不存在** → `Undefined function: <name>`——限定调用还会说明该名字是调用者的帧局部还是在其模块 store 里。**裸名**调用只查函数，数据名同样报 `Undefined function`；link/area store 里不可调用的条目也保持 `Undefined function`（其原生查找走 action 分支，不是共享表）
+- 链不能跨过 callable：某段读到 callable 后若还有段才到终止 key，读与调用都直接报 `TypeError: cannot navigate beyond a callable`，而不是调用它再丢掉余下部分
+
+### 混合 dot+index
+
+`.` 和 `[]` 可任意嵌套：
+
+```js
+var obj = map{"arr": [10, 20]};
+obj.arr[0]          // dot → index → 10
+
+var m = map{"a": map{"b": [1, 2, 3]}};
+m.a.b[1]            // map → map → vec[1] → 2
+m.a.b[null] = 99;   // dot + null 写 → push_back
+```
+
+## 13.3 定位 dot
+
+带 `..` / `::` / `.` 前缀的 dot 链显式指定起点。链沿模块树解析，末端可达普通成员：变量、函数、容器元素都无需桥接即可读写或调用（`.math.mv` → 7、`.bm.a`、`.bv[0]`、`.math.add(1, 2)`、`..f(5)`）；link 的函数同样可直接调用，但其数据保持不可见（§13.4）。`.(...)` 是**链尾**的显式重入：桥内从桥前定位到的值出发重新解析（`.bm.(a)` 读 map 的键 `a`）。
+
+| 前缀 | 含义 | 示例 |
+|------|------|------|
+| `.`  | 锁定当前模块 | `.a.b`（当前 → 子模块 a → 变量 b） |
+| `..` | 父模块（可叠加、可链中） | `..x`，`a..b`，`....x` |
+| `::` | 根模块（仅链首） | `::x`，`::a.b.(c)` |
+
+```
+.x               → 当前模块 → x
+.a.b             → 当前 → 子模块 a → 子模块 b 或变量 b
+.a.(b)           → 当前 → a → 桥接：从那里查 b（桥是链尾，其后不能再接段）
+
+..x              → 父模块 → x
+..f(args)        → 父模块函数调用（无桥）
+....x            → 上两层 → x
+
+::x              → 根模块 → x
+::a.b.(c)        → 根 → 子 a → 子 b → 桥接：从那里查 c
+```
+
+根模块基准 = 脚本所在目录（执行文件时，home_dir 为脚本目录；`::`/`..` root 导航与 CWD 无关）。
+
+### 链中 `..`
+
+```
+a..b             → 进子模块 a → 回父层 → 找兄弟模块 b
+a....b           → 进 a → 上两级 → 找 b
+```
+
+### 激活锚 `^`
+
+`^` 置于链首，把**名字查找**的起点从运行中的激活移到当前 callable 被声明处的激活。它不是实体导航：`^` 之后的名字从那里按普通定义链规则向外解析（声明处的封闭块 → 父激活 → … → 模块 store）。
+
+```js
+def outer() {
+    var x = 1;
+    def inner() {
+        var x = 2;
+        ^x;          // 1 —— 声明处激活的 x；本地遮蔽被跳过
+        ^x = 9;      // 写父层槽位；inner 自己的 x 仍为 2
+        ^x += 1;     // 复合写，目标规则相同
+        ^^x;         // 祖父激活
+        ^m.a;        // 父激活的 m，再走值链 .a
+        ^g();        // 调用声明在父激活里的函数
+    }
+    return inner();
+}
+```
+
+- **单位是激活，不是帧**：block / 循环 / catch / eval 帧不算一级；`^^` 是父的父。每个 `^` 一级激活
+- **只能链首且后接名字**：`^..x`、`^.x`、`^(...)` 是编译错误；`^` 不能出现在链中（两个操作数之间是 XOR，§2.2）
+- **父激活必须存在**：模块顶层，或声明在模块顶层的函数内，`^` → `NavError: ^ exceeds activation depth`——不会静默落到模块 store。父激活存在但名字不在该链上时，普通查找继续向外，最终落到模块 store
+- **归属不变**：`delete ^x` 返回 `false`（槽位属于父层）；`delete ^m.a` 删除元素——内容，不是槽位
+- **`@` 同语法**：`@("^x")`、`@("^" + name)`——路径串由同一解析器解析，没有第二道门
+- **不是导航前缀**：`^` 不打开 `.(...)` 桥（桥需要 `.` / `..` / `::`）——`^x.(a)` 是编译错误，不只是紧跟在 `^` 后的 `.(`
+
+### 桥接 `.(...)`
+
+桥前是定位段（导航记号与名字）；桥从该段定位到的值重新进入解析——因此值的自身键与元素可达（`.bm.(a)`、`.bv.([0])`），桥内目标也可赋值与 `delete`（`.bm.(a) = 99`、`delete .bd.(x)`）。
+
+**桥接必须带定位前缀，且是链尾**：`.(` 的前置链必须以 `.` / `..` / `::` 开头——`..a.(b)`、`::x.(b)` 合法；`a.(b)`（普通名直接桥接）是编译错误（普通成员访问用 `a.b`），裸 `.(b)` 根本不是桥——它按调用形解析、运行期报 `NameError: empty function name`。桥后不能再接任何段（调用也不行）：`.a.(f)(args)` 是解析错误——调用写在链上（`.a.f(args)`），链式桥（`.a.(b).(c)`）同样被拒。
+
+> 桥接并非语法强制——无桥的链照样读、调、写；桥是把「从定位值重入」写明的方式。
+
+```
+..a.b.c.(d.e)
+// 定位段：父→a→b→c
+// 桥接：从 c 出发 dot 链 d.e
+
+..a.b.c.(x[0])
+// 定位段同上 → 桥接：从 c 找 var x，再 [0]
+```
+
+- `.(...)` 内只接受字面量（string key / int_64 索引 / null），不支持表达式
+- `.(...)` 仅出现在链尾；空 `()` 是 no-op（直通链上的值）
+- 桥前段可落在值上；桥进非容器 → `TypeError`；容器在该处则桥内可读、写、`delete`
+
+### 约束
+
+- `..` 和 `.` 不相邻（`...` 非法）
+- `::` 禁止出现在链中
+- `..` 允多个连用（`....` = 上两级）
+- `[]` 在定位链上的用法与普通链相同（`::math.mvv[0]`）
+- **dot 链内 `[]` 只接受字面量**（整数、字符串、null，含 `-N` 常量折叠）——链内变量索引（`d.a[i]`）是编译错误；需动态计算时，先用字符串拼接构造路径，再用 `@(path)` 反射访问。裸名 `v[i]` 是普通索引表达式（不在链内），任意下标皆可
+- 跨模块**变量**：可读写已存在变量，不可新建、不可删除（import 模块规则）
+- 跨模块**容器值**：桥接后可访问容器内 key
+- `..` 超出树深度 → `NavError`
+- **link 数据屏蔽**：link 模块的内部数据对脚本完全不可见——读/写/删均抛 `TypeError`。详见 §13.4
+
+> `@` 仅链首有效（详见 §10）。跨模块反射用组合：`var fn = ..cb; @(".." + fn)(args);`。
+
+## 13.4 delete
+
+`delete` 是右结合一元前缀表达式（与 `@` 同级、由同一层后缀解析消费，因此比 `!` / `~` / `+` / `-` **绑得更紧**——`delete -x` 是语法错误），返回 `bool`。
+可用于表达式语境：`var r = delete x; r;` — `r` 为 `true`（实际删除）或 `false`（静默无操作）。操作数必须是变量、成员访问、索引表达式或 `@()` 动态路径；其他任何形态——字面量、调用结果、切片——**运行期**报 `TypeError`。
+
+### 变量/函数/module 删除
+
+```js
+delete x;             // 删变量（当前模块或 scope frame）
+delete func_name;     // 删除当前层声明的函数定义（更高层声明的 def 在帧内不可删）
+delete alias;         // 删除 import / link 别名
+```
+
+- **执行层**：只有模块顶层（未压帧，即根脚本顶层与 import 模块顶层）从实体的 `m_store` 删除；任何帧（函数/TCO/块/循环/eval/try）只删自己的变量，帧外一律返回 `false`——槽位属于声明它的层，所以外层值只能通过赋值（就地写解析到的槽位）修改，不能在帧内移除；本层声明过的 `def` 是自己的、正常可删，更高层声明的函数不可在此删除：函数是声明层持有的执行权，不是值，帧要遮蔽外层函数只能**自己声明一个**同名函数，绝不能靠 delete
+- **循环头**：for-init 声明与 for-each 迭代变量不能从体内删除（`delete i` → `false`，循环继续）；体变量照常可删
+- 静默失败：名字不存在 → 返回 `false`，不抛异常；但 `@()` 里的名字表达式本身必须先求值成功（`delete @x` 中 `x` 不存在 → `NameError`）
+- 删除后可重新声明 — 名字从所有命名空间移除后，`var`/`def`/`link` 均可正常创建
+- **跨模块 delete**：不可删除其他模块的变量 → 抛 `NameError`
+- **激活锚 delete**：`delete ^x` 返回 `false`——槽位属于父层；`delete ^m.a` 删除元素（内容），与 `delete .m.a` 相同
+- **资源删除不受帧与跨模块槽位规则限制**：删 link 的 area 实例/命名空间销毁的是宿主对象而非移除槽位，所以路径能从任何地方（帧、其他模块）到达就允许——上面两道墙针对的是变量
+- 防御式用法：`delete .init;` 可在声明前安全使用
+
+### 容器删除
+
+`delete var[key]` — 支持完整索引范围，静默返回 `false`。
+
+| 类型 | 索引 | 行为 | 成本 |
+|------|------|------|------|
+| map | key 存在 | erase → `true` | O(log n) |
+| map | key 不存在 | 无操作 → `false` | O(log n) |
+| vec | `0 ~ size-1` / `-1` | 移除元素，后续移位 → `true` | O(n) |
+| vec | 越界 / 空 vec | 无操作 → `false` | O(1) |
+| lst | `0 ~ size-1` / `-1` | 移除节点 → `true` | O(n) |
+| lst | 越界 / 空 lst | 无操作 → `false` | O(1) |
+| 非容器 | 任意 | TypeError | — |
+
+> `null` 索引不合法（`delete a[null]` → `ConvError`），用 `delete a[-1]` 删尾。
+
+### link/area delete 规则
+
+import/link 的 `as` 别名是**普通值**——裸读（`var x = alias`）复制实例，赋值覆盖丢弃实例，每一次交接（实参、返回值、容器字面量/元素、`@("alias")`）都同样复制。副本属于它落地的地方：绑到变量或形参后，从副本 `..` 解析到持有该绑定的模块；没有落地的临时副本没有父。副本独立于原件（自己的 store 与子模块实例），之后 delete 原件不影响它。link 另外屏蔽 dot 写（`alias.x = v` → `TypeError`）；import 的 dot 写允许（写进 import 实体的 `m_store`），落到嵌套别名槽位上的写会丢弃该句柄、值取而代之。
+
+link 模块的内部数据对脚本**完全屏蔽**。area 实例/命名空间（挂在 link 下、持有宿主对象的 anyptr）**允许删除**——删除即销毁宿主对象（anyptr 析构 → 宿主对象被删）；**函数（callable）与数据变量禁止删除**。实例/命名空间删除后，脚本再访问该路径会抛错。
+
+| 目标 | 写法 | 行为 |
+|------|------|------|
+| area 实例 | `delete b.inst` / `delete @("b.inst")` | ✅ 允许删除（宿主对象销毁） |
+| area 命名空间 | `delete b.fs` | ✅ 允许删除（同实例） |
+| link/area 函数 | `delete ts.set` / `delete b.fs.open` | ❌ TypeError（callable 非对象，禁删） |
+| link 数据变量 | `delete ts.data_x` | ❌ TypeError（link 数据屏蔽） |
+| area 数据变量 | `delete b.at_f` | ❌ TypeError（非对象、非 callable） |
+| 定位 dot | `delete .ts.data_x` | ❌ TypeError（同普通 dot） |
+| @ 反射 | `delete @("ts.data_x")` | ❌ TypeError（@ 与直接语法一致） |
+
+> **`@` 与直接语法语义完全一致**：`delete @("b.x")` ≡ `delete b.x`。`@` 只是间接寻址，不改变操作的语义。
+>
+> **原生互操作**：上面这些脚本层限制对原生代码**全部不适用**——不同 link 模块的 C++ 函数可以互相通过 `iload`/`remove` 触达对方的数据；数据屏蔽只作用于脚本层。
+
+<div style="page-break-after: always;"></div>
+
+---
+
+# 14. 多线程
+
+AScript 通过 `$thd_xxx` 扩展函数支持多线程。每个线程持有独立的引擎实例，线程间完全隔离，只通过 `$kv` 模块共享数据。
+
+## 14.1 API
+
+| 函数 | 说明 |
+|---|---|
+| `$thd_create(source, params?, path?)` | 创建线程，返回 handle（anyptr） |
+| `$thd_join(handle)` | 阻塞等待线程结束，返回子引擎 exec 结果 |
+| `$thd_running(handle)` | 查询线程是否仍在运行 |
+| `delete handle` | 强制中断 + 回收（触发析构函数） |
+
+- **source**（必填）：源码字符串，简单语句以 `;` 结尾（复合语句以 `}` 收尾即可）
+- **params**（可选 map）：键值对写入子引擎根作用域，子脚本可直接用变量名访问
+- **path**（可选 string）：home_dir，用于 import 解析；不传则空串
+- 子引擎**全量继承**父引擎配置（runtime + paths + hook + pipe）
+
+## 14.2 线程间通信
+
+线程间唯一的共享状态是 `$kv` 全局键值池。典型握手模式：
+
+```js
+// 父线程
+var h = $thd_create("$kv_store(\"child.ready\", true);", map{});
+while (!$kv_has("child.ready")) { $sys_sleep(10); }
+$kv_store("parent.greet", "hello");
+while (!$kv_has("child.ack")) { $sys_sleep(10); }
+$thd_join(h);
+delete h;
+```
+
+## 14.3 注意事项
+
+- **值传递语义**：params map 写入子引擎根作用域；`$thd_create` 自身不校验字面量，anyptr 也照传（要跨线程共享状态用 `$kv`——`$kv_store`/`$kv_cas` 拒绝 anyptr → TypeError）
+- **字符串拼接**：AScript 用 `+` 拼接字符串（与数值加法共用 `+`）
+- **分号**：简单语句（赋值/调用/声明等）必须以 `;` 结尾，否则 ParseError；复合语句（`if`/`while`/`for`/`def`/块）以 `}` 收尾，不要求尾分号
+- **生命周期**：`delete handle` 触发析构：中断运行中引擎 → join 线程 → 销毁引擎；不 delete 也完整回收——句柄随引擎销毁时释放（interrupt → join → destroy），只是推迟到那时
+- **hook/pipe 继承**：子引擎继承父引擎的 hook 和 pipe 配置；如果父引擎的 pipe 回调绑定到 GUI 线程，子线程调用时需确保线程安全
+
+---
+
+# 附录 A：AScript 命令行用法
+
+```bash
+AScript file.axc               # 执行文件
+AScript -e 'code...'           # 执行内联代码
+AScript -c file.axc            # 编译为 .axp
+AScript -c -e 'code...'        # 编译内联代码
+AScript -c -o out.axp f.axc    # 指定编译输出
+AScript -c --embed f.axc       # 自包含编译
+AScript -x file.axp            # 执行编译码
+AScript -j file.axc            # 打印 AST
+AScript -i                     # 交互式 REPL
+AScript -p /path -p /lib       # 添加搜索路径
+AScript --overflow-check       # 启用溢出检查
+AScript --max-stack N          # 帧深度上限（默认 1024）
+AScript --max-vecfill N        # vec fill 上限（默认 0 = 不限制）
+AScript --hook                 # trap 打印（默认开）
+AScript --no-hook              # trap 打印（关）
+AScript --doc [re]             # 扩展函数手册
+AScript --toc [re]             # 扩展函数名清单（--doc 的精简形态，不含描述）
+AScript -v                     # 版本
+AScript -h                     # 帮助
+```
+
+规则：
+
+- `-c` / `-x` / `-j` 互斥，同时给出报错
+- `-o` 与 `--embed` 仅配合 `-c` 生效（其他模式报错）
+- 未知选项 / 缺参数 / 数值非法 → stderr 报错 + 退出码 2
+- 脚本执行失败 → 退出码 = 引擎错误码（如 ParseError=11、RuntimeError=16；§8.8 表只列类型不列数字）
+- 编译失败 → 退出码 16（CLI 对编译失败的固定返回，与错误类型无关）
+- 后缀约定：`.axc` 源码，`.axp` 编译产物。顶层执行按内容嗅探、不强求后缀；import 时显式 `.axc` 只按源码解析（装入编译产物 → ImportError），`.axp` 与无后缀按内容回落

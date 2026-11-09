@@ -1,0 +1,24 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+  </Configurations>
+  <Folder Name="/AScript/">
+    <Project Path="AxcCli/AxcCli.vcxproj" Id="b2c3d4e5-f6a7-8901-bcde-f12345678901">
+      <BuildDependency Project="AxcCore/AxcCore.vcxproj" />
+    </Project>
+    <Project Path="AxcCore/AxcCore.vcxproj" Id="a1b2c3d4-e5f6-7890-abcd-ef1234567890" />
+    <Project Path="AxcGui/AxcGui.vcxproj" Id="c3d4e5f6-7a8b-4c9d-a0e1-f2a3b4c5d6e7">
+      <BuildDependency Project="AxcCore/AxcCore.vcxproj" />
+      <BuildDependency Project="AxcRunner/AxcRunner.vcxproj" />
+    </Project>
+    <Project Path="AxcRunner/AxcRunner.vcxproj" Id="e5f6a7b8-9c0d-4e1f-a2b3-c4d5e6f7a8b9">
+      <BuildDependency Project="AxcCore/AxcCore.vcxproj" />
+    </Project>
+  </Folder>
+  <Folder Name="/Links/">
+    <Project Path="Cip/Cip.vcxproj" Id="142730ec-1e44-4d88-97d8-eb5057bd31f7" />
+    <Project Path="Cv/Cv.vcxproj" Id="9a6b3c2d-7e4f-4b1a-8c5d-1f2e3a4b5c6d" />
+    <Project Path="Net/Net.vcxproj" Id="0092dc3c-7df6-4ec8-a3de-7054428d451d" />
+    <Project Path="Ollama/Ollama.vcxproj" Id="d4e5f6a7-8b9c-4d0e-a1f2-b3c4d5e6f7a8" />
+  </Folder>
+</Solution>

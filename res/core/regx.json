@@ -1,0 +1,198 @@
+{
+  "functions": {
+    "regx_valid": [
+      {
+        "desc": "check if regex pattern is valid",
+        "param": [
+          {
+            "key": "pattern",
+            "type": "string",
+            "desc": "regex pattern"
+          }
+        ],
+        "ret": {
+          "type": "bool",
+          "desc": "true if valid"
+        }
+      }
+    ],
+    "regx_match": [
+      {
+        "desc": "check if entire string matches pattern",
+        "param": [
+          {
+            "key": "pattern",
+            "type": "string",
+            "desc": "regex pattern"
+          },
+          {
+            "key": "str",
+            "type": "string",
+            "desc": "string to test"
+          }
+        ],
+        "ret": {
+          "type": "bool",
+          "desc": "true if matches"
+        }
+      }
+    ],
+    "regx_find": [
+      {
+        "desc": "find first match",
+        "param": [
+          {
+            "key": "pattern",
+            "type": "string",
+            "desc": "regex pattern"
+          },
+          {
+            "key": "str",
+            "type": "string",
+            "desc": "string to search"
+          }
+        ],
+        "ret": {
+          "type": "string",
+          "desc": "matched text, or empty string"
+        }
+      }
+    ],
+    "regx_find_all": [
+      {
+        "desc": "find all matches",
+        "param": [
+          {
+            "key": "pattern",
+            "type": "string",
+            "desc": "regex pattern"
+          },
+          {
+            "key": "str",
+            "type": "string",
+            "desc": "string to search"
+          }
+        ],
+        "ret": {
+          "type": "vec",
+          "desc": "matched texts"
+        }
+      }
+    ],
+    "regx_group": [
+      {
+        "desc": "find first match with capture groups",
+        "param": [
+          {
+            "key": "pattern",
+            "type": "string",
+            "desc": "regex pattern with groups"
+          },
+          {
+            "key": "str",
+            "type": "string",
+            "desc": "string to search"
+          }
+        ],
+        "ret": {
+          "type": "vec",
+          "desc": "capture groups (excludes full match)"
+        }
+      }
+    ],
+    "regx_group_all": [
+      {
+        "desc": "find all matches with capture groups",
+        "param": [
+          {
+            "key": "pattern",
+            "type": "string",
+            "desc": "regex pattern with groups"
+          },
+          {
+            "key": "str",
+            "type": "string",
+            "desc": "string to search"
+          }
+        ],
+        "ret": {
+          "type": "vec",
+          "desc": "vec of vec — each inner vec is capture groups per match"
+        }
+      }
+    ],
+    "regx_replace": [
+      {
+        "desc": "replace first match",
+        "param": [
+          {
+            "key": "pattern",
+            "type": "string",
+            "desc": "regex pattern"
+          },
+          {
+            "key": "str",
+            "type": "string",
+            "desc": "source string"
+          },
+          {
+            "key": "repl",
+            "type": "string",
+            "desc": "replacement ($1-style backrefs)"
+          }
+        ],
+        "ret": {
+          "type": "string",
+          "desc": "replaced string"
+        }
+      }
+    ],
+    "regx_replace_all": [
+      {
+        "desc": "replace all matches",
+        "param": [
+          {
+            "key": "pattern",
+            "type": "string",
+            "desc": "regex pattern"
+          },
+          {
+            "key": "str",
+            "type": "string",
+            "desc": "source string"
+          },
+          {
+            "key": "repl",
+            "type": "string",
+            "desc": "replacement ($1-style backrefs)"
+          }
+        ],
+        "ret": {
+          "type": "string",
+          "desc": "replaced string"
+        }
+      }
+    ],
+    "regx_split": [
+      {
+        "desc": "split string by regex pattern",
+        "param": [
+          {
+            "key": "pattern",
+            "type": "string",
+            "desc": "regex pattern"
+          },
+          {
+            "key": "str",
+            "type": "string",
+            "desc": "string to split"
+          }
+        ],
+        "ret": {
+          "type": "vec",
+          "desc": "parts"
+        }
+      }
+    ]
+  }
+}

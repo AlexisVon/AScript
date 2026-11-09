@@ -1,0 +1,60 @@
+// Cover test: Data types and operations
+// Tests: int, float, bool, string, null, literals
+
+// === Int literals ===
+var dec = 42;
+var hex = 0xFF;
+var oct = 0o77;
+var bin = 0b1010;
+var neg = -100;
+
+if (dec != 42) { $io_print("FAIL: dec\n"); }
+if (hex != 255) { $io_print("FAIL: hex\n"); }
+if (oct != 63) { $io_print("FAIL: oct\n"); }
+if (bin != 10) { $io_print("FAIL: bin\n"); }
+if (neg != -100) { $io_print("FAIL: neg\n"); }
+
+// === Float literals ===
+var pi = 3.14;
+var sci = 1e5;
+var small = 1.5e-3;
+
+if (pi < 3.13 || pi > 3.15) { $io_print("FAIL: pi\n"); }
+if (sci != 100000) { $io_print("FAIL: sci\n"); }
+if (small < 0.0014 || small > 0.0016) { $io_print("FAIL: small\n"); }
+
+// === Bool ===
+var t = true;
+var f = false;
+
+if (t != true) { $io_print("FAIL: true\n"); }
+if (f != false) { $io_print("FAIL: false\n"); }
+if (!t) { $io_print("FAIL: not true\n"); }
+if (!!f) { $io_print("FAIL: not not false\n"); }
+
+// === String ===
+var dq = "double quote";
+var cq = 'q';
+var raw = `raw string with \n no escape`;
+
+if (dq != "double quote") { $io_print("FAIL: dq\n"); }
+if (cq != 'q') { $io_print("FAIL: cq\n"); }
+if (raw != "raw string with \\n no escape") { $io_print("FAIL: raw\n"); }
+
+// Escape sequences
+var esc = "tab\there\nnewline";
+if (esc != "tab\there\nnewline") { $io_print("FAIL: esc\n"); }
+
+// === Null ===
+var n;
+if (n != null) { $io_print("FAIL: null\n"); }
+if (type(n) != "null") { $io_print("FAIL: type null\n"); }
+
+// === Type checks ===
+if (type(42) != "int") { $io_print("FAIL: type int\n"); }
+if (type(3.14) != "float") { $io_print("FAIL: type float\n"); }
+if (type(true) != "bool") { $io_print("FAIL: type bool\n"); }
+if (type("hi") != "string") { $io_print("FAIL: type string\n"); }
+if (type(null) != "null") { $io_print("FAIL: type null\n"); }
+
+$io_print("data_types: OK\n");

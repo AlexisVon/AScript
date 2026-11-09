@@ -1,0 +1,56 @@
+// Cover test: 统一末尾取值语义 + 可写视图 + IndexError（fwrap 实参指针化, libalexis 2.1）
+// Adapted from Alexis engine cover/control/args_eval.axc (AScript runner: throw = fail).
+//  S1: f(x, x = 5) — 后位实参表达式赋值前置变量 → native 与 def 看到相同值
+//  S2: f(count, next_count()) — 后位实参调用的函数改写前置变量 → native 与 def 一致
+//  S4: f(undefined, g()) — NameError 在 g() 求值前抛出，g() 副作用未发生
+//  可写视图: native 经 fw[0] 写入 → 调用者变量变化
+//  IndexError: 越界实参读取抛 IndexError
+
+link "test_store.so" as ts;
+
+def check(cond, msg) {
+    if (!cond) throw msg;
+}
+
+// ===== S1: 后位实参表达式赋值前置变量（末尾取值，native 与 def 一致） =====
+def echo_first(a, b) { return a; }
+
+var x1 = 1;
+var s1 = echo_first(x1, x1 = 5);
+check(s1 == 5, "S1 def: echo_first(x, x=5) -> a=5");
+
+var x2 = 1;
+var n1 = ts.sub.echo(x2, x2 = 5);
+check(n1 == 5, "S1 native: ts.sub.echo(x, x=5) -> args[0]=5");
+
+// ===== S2: 后位实参调用的函数改写前置变量（末尾取值，native 与 def 一致） =====
+var count = 1;
+def next_count() { count = count + 1; return count; }
+var s2 = echo_first(count, next_count());
+check(s2 == 2, "S2 def: echo_first(count, next_count()) -> a=2");
+
+var count2 = 1;
+def next_count2() { count2 = count2 + 1; return count2; }
+var n2 = ts.sub.echo(count2, next_count2());
+check(n2 == 2, "S2 native: ts.sub.echo(count2, next_count2()) -> args[0]=2");
+
+// ===== S4: 错误时序 — NameError 在后续实参求值前抛出 =====
+var g_ran = 0;
+def g() { g_ran = 1; return 0; }
+var s4 = false;
+try { var t = echo_first(no_such_var, g()); }
+catch (e) { s4 = true; }
+check(s4, "S4 未定义变量实参 -> NameError");
+check(g_ran == 0, "S4 g() 不应执行（校验先于求值）");
+
+// ===== 可写视图: native 经 fw[0] 写入 → 调用者变量变化 =====
+var w = 1;
+var rw = ts.write_arg(w);
+check(w == 999, "可写视图: native 写 args[0] -> 调用者变量变化");
+check(rw == 999, "可写视图: freturn 返回写入值");
+
+// ===== IndexError: 越界实参读取抛异常（不静默空返回） =====
+var ie = false;
+try { ts.write_arg(); }
+catch (e) { ie = true; }
+check(ie, "IndexError: 0 实参调用读 args[0] -> 抛异常");

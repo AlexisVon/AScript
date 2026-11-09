@@ -1,0 +1,9 @@
+// Test 7b: v[0], v[-1], v[null] 写
+var v; v = [10, 20, 30];
+v[0] = 99;
+if (v[0] == 99) { $io_print("PASS: 7b vec[0] write\n"); } else { $io_print("FAIL\n"); }
+v[-1] = 88;
+if (v[-1] == 88) { $io_print("PASS: 7b vec[-1] write\n"); } else { $io_print("FAIL\n"); }
+v[null] = 77;
+if (v[3] == 77) { $io_print("PASS: 7b vec[null] write = push_back\n"); } else { $io_print("FAIL\n"); }
+if (v[null] == 4) { $io_print("PASS: 7b vec[null] size after push\n"); } else { $io_print("FAIL\n"); }

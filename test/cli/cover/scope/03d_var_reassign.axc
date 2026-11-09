@@ -1,0 +1,5 @@
+// Test 3d: var x -> 再 x = 1 (重赋值) -> OK
+var x; x = 1;
+x = 42;
+if (x == 42) { $io_print("PASS: 3d var->reassign OK\n"); }
+else { $io_print("FAIL\n"); }

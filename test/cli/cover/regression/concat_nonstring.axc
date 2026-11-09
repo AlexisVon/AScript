@@ -1,0 +1,38 @@
+// NOTE-09: + operator behavior with non-string operands
+// After v1.0.4_0: + does numeric addition for numbers
+// String+number concatenation throws TypeError (must use explicit string())
+
+var ok = false;
+var errtype = "";
+
+// int + int: numeric addition (not concatenation)
+var r = 1 + 2;
+if (r != 3) {
+    throw "NOTE-09: 1 + 2 = " + string(r) + ", expected 3";
+}
+
+// string + int: should throw TypeError
+try {
+    var r2 = "x=" + 42;
+} catch (e) {
+    ok = true;
+    errtype = e.what;
+}
+if (!ok) {
+    throw "NOTE-09: 'x=' + 42 no longer throws — expected TypeError";
+}
+if (errtype != "TypeError") {
+    throw "NOTE-09: 'x=' + 42 threw " + errtype + ", expected TypeError";
+}
+
+// string + string always works
+var r3 = "a" + "b";
+if (r3 != "ab") {
+    throw "NOTE-09: 'a' + 'b' = " + r3 + ", expected 'ab'";
+}
+
+// explicit string() conversion works
+var r4 = "x=" + string(42);
+if (r4 != "x=42") {
+    throw "NOTE-09: 'x=' + string(42) = " + r4 + ", expected 'x=42'";
+}

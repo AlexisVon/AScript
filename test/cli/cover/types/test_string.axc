@@ -1,0 +1,63 @@
+// §3.4 string — double quote, char literal, backtick raw, escape sequences
+// lang-guide §3.4
+
+var passed = 0;
+var failed = 0;
+var failures = "";
+
+def to_str(v) { if (v == null) { return "null"; } return string(v); }
+def assert_eq(a, e, n) { if (a == e) { passed = passed + 1; return; } failed = failed + 1; failures = failures + "  FAIL " + n + ": expected " + to_str(e) + " got " + to_str(a) + "\n"; }
+def assert_true(c, n) { if (c) { passed = passed + 1; return; } failed = failed + 1; failures = failures + "  FAIL " + n + ": expected true\n"; }
+
+// ---- double-quote string ----
+assert_eq("hello", "hello", "double-quote literal");
+assert_eq("", "", "empty double-quote string");
+
+// ---- char literal: exactly one code point, evaluates to int ----
+assert_eq('A', 65, "char literal = its code point");
+assert_eq('"', 34, "char literal holds a double quote without escape");
+assert_eq('\n', 10, "char literal escape decodes to a code point");
+assert_eq('你', 20320, "multi-byte char literal = its code point");
+
+// ---- double-quote contains single-quote ----
+assert_eq("it's", "it's", "double-quote contains single-quote without escape");
+
+// ---- escape sequences ----
+assert_eq("\t", "\x09", "tab escape");
+assert_eq("\n", "\x0a", "newline escape");
+assert_eq("\r", "\x0d", "carriage return escape");
+assert_eq("\\", "\\", "backslash escape");
+assert_eq("\'", "\x27", "single quote escape");
+assert_eq("\"", "\x22", "double quote escape");
+assert_eq("\0", string([0]), "null char escape");
+
+// ---- \xNN hex escape ----
+assert_eq("\x41", "A", "\\x41 = A");
+assert_eq("\x7e", "~", "\\x7e = ~");
+assert_eq("\x00", string([0]), "\\x00 = null char");
+
+// ---- backtick raw string (no escapes) ----
+var raw = `raw \n "quoted" 'single'`;
+assert_eq(raw, "raw \\n \"quoted\" 'single'", "backtick raw string: escapes preserved literally");
+
+// ---- backtick multiline ----
+var multi = `line1
+line2
+line3`;
+assert_true(multi != "", "backtick multiline non-empty");
+
+// ---- backtick with backticks inside (not possible, but test length) ----
+var empty_raw = ``;
+assert_eq(empty_raw, "", "backtick empty raw string");
+
+// ---- string concatenation via + ----
+assert_eq("hello " + "world", "hello world", "string concat with #");
+
+// ---- type check ----
+assert_eq(type("hello"), "string", "type(\"hello\") = string");
+
+if (failed > 0) {
+    $io_print("\n=== FAIL: test_string ===\n");
+    $io_print("Passed: %1 / %2\n", passed, passed + failed);
+    $io_print("FAILURES:\n%1", failures);
+}

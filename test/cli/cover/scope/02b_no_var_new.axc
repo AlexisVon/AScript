@@ -1,0 +1,8 @@
+// Test 2b: 找不到则在当前帧新建
+var caught; caught = false;
+try {
+    { auto_new = 42; }
+    tmp = auto_new;
+} catch (e) { caught = true; }
+if (caught) { $io_print("PASS: 2b auto-new var not visible outside block\n"); }
+else { $io_print("FAIL: 2b auto-new var leaked or no error\n"); }

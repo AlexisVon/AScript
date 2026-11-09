@@ -1,0 +1,154 @@
+{
+  "functions": {
+    "bytes_size": [
+      {
+        "desc": "number of bytes",
+        "param": [
+          {
+            "key": "b",
+            "type": "bytes",
+            "desc": "bytes to inspect"
+          }
+        ],
+        "ret": {
+          "type": "int",
+          "desc": "byte count"
+        }
+      }
+    ],
+    "bytes_find": [
+      {
+        "desc": "find first occurrence of a byte pattern",
+        "param": [
+          {
+            "key": "b",
+            "type": "bytes",
+            "desc": "bytes to search"
+          },
+          {
+            "key": "needle",
+            "type": "bytes|string",
+            "desc": "pattern to find"
+          },
+          {
+            "key": "from",
+            "type": "int",
+            "optional": true,
+            "default": 0,
+            "desc": "start position"
+          }
+        ],
+        "ret": {
+          "type": "int",
+          "desc": "index, or -1 if not found"
+        }
+      }
+    ],
+    "bytes_mid": [
+      {
+        "desc": "extract a byte range",
+        "param": [
+          {
+            "key": "b",
+            "type": "bytes",
+            "desc": "source bytes"
+          },
+          {
+            "key": "pos",
+            "type": "int",
+            "desc": "start position"
+          },
+          {
+            "key": "len",
+            "type": "int",
+            "optional": true,
+            "desc": "length; omitted = to end"
+          }
+        ],
+        "ret": {
+          "type": "bytes",
+          "desc": "sub-bytes"
+        }
+      }
+    ],
+    "bytes_left": [
+      {
+        "desc": "first n bytes",
+        "param": [
+          {
+            "key": "b",
+            "type": "bytes",
+            "desc": "source bytes"
+          },
+          {
+            "key": "n",
+            "type": "int",
+            "desc": "number of bytes"
+          }
+        ],
+        "ret": {
+          "type": "bytes",
+          "desc": "left sub-bytes"
+        }
+      }
+    ],
+    "bytes_right": [
+      {
+        "desc": "last n bytes",
+        "param": [
+          {
+            "key": "b",
+            "type": "bytes",
+            "desc": "source bytes"
+          },
+          {
+            "key": "n",
+            "type": "int",
+            "desc": "number of bytes"
+          }
+        ],
+        "ret": {
+          "type": "bytes",
+          "desc": "right sub-bytes"
+        }
+      }
+    ],
+    "bytes_append": [
+      {
+        "desc": "concatenate two bytes (returns new)",
+        "param": [
+          {
+            "key": "a",
+            "type": "bytes",
+            "desc": "first bytes"
+          },
+          {
+            "key": "b",
+            "type": "bytes|string",
+            "desc": "second bytes or string"
+          }
+        ],
+        "ret": {
+          "type": "bytes",
+          "desc": "concatenated bytes"
+        }
+      }
+    ],
+    "bytes_revers": [
+      {
+        "desc": "reverse byte order (returns new)",
+        "param": [
+          {
+            "key": "b",
+            "type": "bytes",
+            "desc": "source bytes"
+          }
+        ],
+        "ret": {
+          "type": "bytes",
+          "desc": "reversed bytes"
+        }
+      }
+    ]
+  }
+}

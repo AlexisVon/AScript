@@ -1,0 +1,115 @@
+// Cover test: Operators
+// Tests: arithmetic, comparison, logical, bitwise, string concat, ternary, inc/dec
+
+// === Arithmetic ===
+var a = 10, b = 3;
+
+if (a + b != 13) { $io_print("FAIL: add\n"); }
+if (a - b != 7) { $io_print("FAIL: sub\n"); }
+if (a * b != 30) { $io_print("FAIL: mul\n"); }
+if (a / b != 3) { $io_print("FAIL: div\n"); }
+if (a % b != 1) { $io_print("FAIL: mod\n"); }
+
+// Float arithmetic
+var fa = 10.0, fb = 3.0;
+if (fa + fb < 12.9 || fa + fb > 13.1) { $io_print("FAIL: fadd\n"); }
+if (fa / fb < 3.32 || fa / fb > 3.34) { $io_print("FAIL: fdiv\n"); }
+
+// === Comparison ===
+if (!(10 > 3)) { $io_print("FAIL: gt\n"); }
+if (!(10 >= 10)) { $io_print("FAIL: ge\n"); }
+if (!(3 < 10)) { $io_print("FAIL: lt\n"); }
+if (!(3 <= 3)) { $io_print("FAIL: le\n"); }
+if (!(10 == 10)) { $io_print("FAIL: eq\n"); }
+if (!(10 != 3)) { $io_print("FAIL: ne\n"); }
+
+// Int-float comparison
+if (!(10 == 10.0)) { $io_print("FAIL: int float eq\n"); }
+if (!(10.5 > 10)) { $io_print("FAIL: float int gt\n"); }
+
+// String comparison
+if (!("abc" < "abd")) { $io_print("FAIL: str lt\n"); }
+if (!("abc" == "abc")) { $io_print("FAIL: str eq\n"); }
+
+// Null comparison
+if (!(null == null)) { $io_print("FAIL: null eq\n"); }
+if (null != null) { $io_print("FAIL: null ne\n"); }
+if (null == 0) { $io_print("FAIL: null int eq\n"); }
+
+// === Logical ===
+if (!(true && true)) { $io_print("FAIL: and\n"); }
+if (true && false) { $io_print("FAIL: and false\n"); }
+if (!(true || false)) { $io_print("FAIL: or\n"); }
+if (false || false) { $io_print("FAIL: or false\n"); }
+if (!(!false)) { $io_print("FAIL: not\n"); }
+
+// Short circuit
+var sc = 0;
+false && (sc = 1);
+if (sc != 0) { $io_print("FAIL: and sc\n"); }
+true || (sc = 1);
+if (sc != 0) { $io_print("FAIL: or sc\n"); }
+
+// === Bitwise ===
+var x = 0xFF, y = 0x0F;
+if ((x & y) != 0x0F) { $io_print("FAIL: and\n"); }
+if ((x | y) != 0xFF) { $io_print("FAIL: or\n"); }
+if ((x ^ y) != 0xF0) { $io_print("FAIL: xor\n"); }
+if ((~0) != -1) { $io_print("FAIL: not\n"); }
+if ((1 << 4) != 16) { $io_print("FAIL: shl\n"); }
+if ((16 >> 2) != 4) { $io_print("FAIL: shr\n"); }
+
+// === String concat ===
+var s1 = "hello", s2 = " world";
+if ((s1 + s2) != "hello world") { $io_print("FAIL: concat\n"); }
+
+var s3 = "test";
+s3 += "!";
+if (s3 != "test!") { $io_print("FAIL: concat assign\n"); }
+
+// === Ternary ===
+var t1 = true ? 1 : 0;
+var t2 = false ? 1 : 0;
+if (t1 != 1) { $io_print("FAIL: tern true\n"); }
+if (t2 != 0) { $io_print("FAIL: tern false\n"); }
+
+// Ternary short circuit
+var ts = 0;
+true ? (ts = 1) : (ts = 2);
+if (ts != 1) { $io_print("FAIL: tern sc true\n"); }
+false ? (ts = 3) : (ts = 4);
+if (ts != 4) { $io_print("FAIL: tern sc false\n"); }
+
+// === Increment/Decrement ===
+var i = 10;
+if (i++ != 10) { $io_print("FAIL: post inc\n"); }
+if (i != 11) { $io_print("FAIL: post inc val\n"); }
+if (++i != 12) { $io_print("FAIL: pre inc\n"); }
+if (i-- != 12) { $io_print("FAIL: post dec\n"); }
+if (i != 11) { $io_print("FAIL: post dec val\n"); }
+if (--i != 10) { $io_print("FAIL: pre dec\n"); }
+
+// === Compound assignment ===
+var c = 10;
+c += 5;
+if (c != 15) { $io_print("FAIL: +=\n"); }
+c -= 3;
+if (c != 12) { $io_print("FAIL: -=\n"); }
+c *= 2;
+if (c != 24) { $io_print("FAIL: *=\n"); }
+c /= 4;
+if (c != 6) { $io_print("FAIL: /=\n"); }
+c %= 4;
+if (c != 2) { $io_print("FAIL: %=\n"); }
+c <<= 3;
+if (c != 16) { $io_print("FAIL: <<=\n"); }
+c >>= 2;
+if (c != 4) { $io_print("FAIL: >>=\n"); }
+c &= 6;
+if (c != 4) { $io_print("FAIL: &=\n"); }
+c |= 3;
+if (c != 7) { $io_print("FAIL: |=\n"); }
+c ^= 5;
+if (c != 2) { $io_print("FAIL: ^=\n"); }
+
+$io_print("operators: OK\n");

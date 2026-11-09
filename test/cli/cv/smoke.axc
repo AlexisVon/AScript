@@ -1,0 +1,100 @@
+link "cv.so" as cv;
+
+$io_print("version: %1\n", cv.version());
+
+var img = cv.create(64, 48, "8uc3", 0x204060);
+var info = cv.info(img);
+$io_print("created: %1x%2 %3 ch=%4 depth=%5\n", info.width, info.height, info.mat_type, info.channels, info.depth);
+
+cv.rect(img, 4, 4, 20, 10, 0x00FF00, 2);
+cv.circle(img, 40, 24, 10, 0xFFFFFF, -1);
+cv.line(img, 0, 0, 63, 47, 0xFF0000, 1);
+cv.text(img, "cv", 24, 40, 0.5, 0xFFFF00, 1);
+
+var png = cv.imencode(img, "png", map{"png_compression": 6});
+$io_print("png bytes: %1\n", $bytes_size(png));
+
+var back = cv.imdecode(png, "color");
+var binfo = cv.info(back);
+$io_print("decoded: %1x%2 %3\n", binfo.width, binfo.height, binfo.mat_type);
+
+var gray = cv.cvt_color(back, "bgr2gray");
+var ginfo = cv.info(gray);
+$io_print("gray: %1\n", ginfo.mat_type);
+
+var resized = cv.resize(gray, 32, 24, "area");
+var rinfo = cv.info(resized);
+$io_print("resized: %1x%2\n", rinfo.width, rinfo.height);
+
+var blurred = cv.gaussian_blur(resized, 3, 1.0);
+var edges = cv.canny(blurred, 50, 150);
+var einfo = cv.info(edges);
+$io_print("edges: %1\n", einfo.mat_type);
+
+var thr = cv.threshold(gray, 128, 255, "binary");
+var parts = cv.split(back);
+$io_print("split: %1\n", $vec_size(parts));
+var merged = cv.merge(parts);
+var minfo = cv.info(merged);
+$io_print("merged: %1\n", minfo.mat_type);
+
+var blended = cv.blend(back, merged, 0.5);
+var blinfo = cv.info(blended);
+$io_print("blended: %1\n", blinfo.mat_type);
+
+var sobel = cv.sobel(gray, 1, 0);
+var sinfo = cv.info(sobel);
+$io_print("sobel: %1\n", sinfo.mat_type);
+var sobel8 = cv.convert(sobel, "8u");
+var s8info = cv.info(sobel8);
+$io_print("sobel8: %1\n", s8info.mat_type);
+
+var rot = cv.rotate(back, 90);
+var rotinfo = cv.info(rot);
+$io_print("rot: %1x%2\n", rotinfo.width, rotinfo.height);
+
+var crop = cv.crop(back, 0, 0, 16, 16);
+var cinfo = cv.info(crop);
+$io_print("crop: %1x%2\n", cinfo.width, cinfo.height);
+
+var tr = cv.transpose(back);
+var trinfo = cv.info(tr);
+$io_print("transpose: %1x%2\n", trinfo.width, trinfo.height);
+
+var fl = cv.flip(back, "both");
+$io_print("flip ok\n");
+
+cv.imwrite("/tmp/axc_cv_out.png", back);
+var from_file = cv.imread("/tmp/axc_cv_out.png");
+var finfo = cv.info(from_file);
+$io_print("file: %1x%2\n", finfo.width, finfo.height);
+
+var chans = [cv.create(4, 4, "8u"), cv.create(4, 4, "8u"), cv.create(4, 4, "8u"),
+             cv.create(4, 4, "8u"), cv.create(4, 4, "8u"), cv.create(4, 4, "8u"),
+             cv.create(4, 4, "8u"), cv.create(4, 4, "8u"), cv.create(4, 4, "8u"),
+             cv.create(4, 4, "8u")];
+var m10 = cv.merge(chans);
+var m10i = cv.info(m10);
+$io_print("merge10: %1 ch=%2\n", m10i.mat_type, m10i.channels);
+var c10 = cv.convert(m10, "16uc10");
+var c10i = cv.info(c10);
+$io_print("convert10: %1\n", c10i.mat_type);
+
+var er = cv.erode(gray, 3, 1);
+var di = cv.dilate(gray, 3, 1);
+var op = cv.morphology(gray, "open", 3, 1);
+var bl = cv.blur(gray, 3);
+var med = cv.median_blur(gray, 3);
+var bil = cv.bilateral(back, 5, 50, 50);
+var lap = cv.laplacian(gray, 1);
+$io_print("filters ok\n");
+
+var add = cv.add(back, back);
+var sub = cv.subtract(back, back);
+var ad = cv.absdiff(back, back);
+var an = cv.bitwise_and(back, back);
+var orr = cv.bitwise_or(back, back);
+var xo = cv.bitwise_xor(back, back);
+var nt = cv.bitwise_not(back);
+var cl = cv.clone(back);
+$io_print("arith ok\n");

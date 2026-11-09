@@ -1,0 +1,60 @@
+// T01: 引用反射 — 读
+// @name, @(expr), 已存在/不存在/非string/namespace路径
+
+var x = 42;
+var name = "x";
+
+// 1. @name: name是string变量，值为目标变量名
+$io_print("T01.1 @name: ", @name);
+if (@name != 42) { $io_print("FAIL T01.1"); throw("assert"); }
+$io_print("OK");
+
+// 2. @(expr): expr求值结果为string
+var target = "x";
+$io_print("T01.2 @(expr): ", @(target));
+if (@(target) != 42) { $io_print("FAIL T01.2"); throw("assert"); }
+$io_print("OK");
+
+// 3. 读已存在变量
+var msg = "hello";
+var vn = "msg";
+$io_print("T01.3 existing: ", @vn);
+if (@vn != "hello") { $io_print("FAIL T01.3"); throw("assert"); }
+$io_print("OK");
+
+// 4. 读不存在的名 → NameError
+var nonexist_name = "no_such_var_xyz";
+var got_error = false;
+try {
+    var val = @nonexist_name;
+    $io_print("ERROR: should have thrown NameError");
+} catch (e) {
+    got_error = true;
+    $io_print("T01.4 nonexistent caught: ", e);
+}
+if (!got_error) { $io_print("FAIL T01.4"); throw("assert"); }
+$io_print("OK");
+
+// 5. 非string → TypeError
+var not_str = 123;
+got_error = false;
+try {
+    var val = @not_str;
+    $io_print("ERROR: should have thrown TypeError");
+} catch (e) {
+    got_error = true;
+    $io_print("T01.5 non-string caught: ", e);
+}
+if (!got_error) { $io_print("FAIL T01.5"); throw("assert"); }
+$io_print("OK");
+
+// 6. 间接读 namespace 变量（路径含 .）
+var ns = map();
+ns.a = map();
+ns.a.b = 42;
+var path = "ns.a.b";
+$io_print("T01.6 namespace path: ", @path);
+if (@path != 42) { $io_print("FAIL T01.6"); throw("assert"); }
+$io_print("OK");
+
+$io_print("T01 all passed");

@@ -1,0 +1,12 @@
+// type() 函数 — 每个类型返回正确的类型名字符串
+$io_print("--- test_typefunc ---");
+
+var sv = "hello";
+$io_print("type(42) = %1", type(42));
+$io_print("type(3.14) = %1", type(3.14));
+$io_print("type(hello) = %1", type(sv));
+$io_print("type(true) = %1", type(true));
+$io_print("type(null) = %1", type(null));
+$io_print("type([1,2]) = %1", type([1, 2]));
+$io_print("type(lst[]) = %1", type(lst[]));
+$io_print("type(map{}) = %1", type(map{}));

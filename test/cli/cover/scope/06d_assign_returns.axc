@@ -1,0 +1,4 @@
+// Test 6d: 赋值表达式有返回值
+var a; a = 0;
+var b; b = (a = 42);
+if (b == 42) { $io_print("PASS: 6d assignment returns value\n"); } else { $io_print("FAIL\n"); }

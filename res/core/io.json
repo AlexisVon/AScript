@@ -1,0 +1,164 @@
+{
+  "functions": {
+    "io_fmjs": [
+      {
+        "desc": "parse JSON string to value",
+        "param": [
+          {
+            "key": "str",
+            "type": "string",
+            "desc": "JSON string"
+          }
+        ],
+        "ret": {
+          "type": "any",
+          "desc": "parsed value, null on failure"
+        }
+      }
+    ],
+    "io_fread": [
+      {
+        "desc": "read file content as bytes",
+        "param": [
+          {
+            "key": "path",
+            "type": "string",
+            "desc": "file path"
+          }
+        ],
+        "ret": {
+          "type": "bytes",
+          "desc": "file content, empty bytes if not found"
+        }
+      }
+    ],
+    "io_fwrite": [
+      {
+        "desc": "write bytes or string content to file",
+        "param": [
+          {
+            "key": "path",
+            "type": "string",
+            "desc": "file path"
+          },
+          {
+            "key": "content",
+            "type": "bytes|string",
+            "desc": "bytes or string to write"
+          }
+        ],
+        "ret": {
+          "type": "bool",
+          "desc": "write success"
+        }
+      }
+    ],
+    "io_input": [
+      {
+        "desc": "read one line from stdin",
+        "param": [],
+        "ret": {
+          "type": "string",
+          "desc": "input line"
+        }
+      }
+    ],
+    "io_print": [
+      {
+        "desc": "print nothing",
+        "param": []
+      },
+      {
+        "desc": "print a value directly",
+        "param": [
+          {
+            "key": "v",
+            "type": "any",
+            "desc": "any value (containers render recursively, handles as <name>)"
+          }
+        ]
+      },
+      {
+        "desc": "print formatted text (%1-style placeholders)",
+        "param": [
+          {
+            "key": "fmt",
+            "type": "string",
+            "desc": "format string with %1..%N"
+          },
+          {
+            "key": "args...",
+            "type": "any",
+            "desc": "values for placeholders"
+          }
+        ]
+      }
+    ],
+    "io_tojs": [
+      {
+        "desc": "convert value to JSON string",
+        "param": [
+          {
+            "key": "value",
+            "type": "any",
+            "desc": "any value"
+          },
+          {
+            "key": "compact",
+            "type": "bool",
+            "optional": true,
+            "default": false,
+            "desc": "compact JSON"
+          }
+        ],
+        "ret": {
+          "type": "string",
+          "desc": "JSON"
+        }
+      }
+    ],
+    "io_read": [
+      {
+        "desc": "read from a $fs_open read handle",
+        "param": [
+          {
+            "key": "handle",
+            "type": "handle",
+            "desc": "read handle from $fs_open"
+          },
+          {
+            "key": "ofst",
+            "type": "int",
+            "optional": true,
+            "desc": "offset; omitted = whole content"
+          }
+        ],
+        "ret": {
+          "type": "bytes",
+          "desc": "content from ofst to end"
+        }
+      }
+    ],
+    "io_write": [
+      {
+        "desc": "append to a $fs_open write handle (flushed)",
+        "param": [
+          {
+            "key": "handle",
+            "type": "handle",
+            "desc": "write handle from $fs_open (w/a mode)"
+          },
+          {
+            "key": "data",
+            "type": "bytes|string",
+            "desc": "data to append"
+          }
+        ],
+        "ret": {
+          "type": "bool",
+          "desc": "true on success"
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,49 @@
+// Cover test: $regx_xxx regex operations
+
+def check(cond, msg) {
+    if (!cond) throw msg;
+}
+
+// valid
+check($regx_valid("\\d+"), "re_valid good");
+check(!$regx_valid("[invalid"), "re_valid bad");
+
+// match
+check($regx_match("\\d+", "123"), "re_match true");
+check(!$regx_match("\\d+", "abc"), "re_match false");
+
+// find
+check($regx_find("\\d+", "abc123def") == "123", "re_find");
+check($regx_find("\\d+", "no digits") == "", "re_find miss");
+
+// find_all
+var all = $regx_find_all("\\d+", "a1b22c333");
+check($vec_size(all) == 3, "find_all count");
+check(all[0] == "1" && all[1] == "22" && all[2] == "333", "find_all values");
+
+// group (capture groups, excludes full match)
+var g = $regx_group("(\\w+)@(\\w+)", "user@host");
+check($vec_size(g) == 2, "group count");
+check(g[0] == "user" && g[1] == "host", "group values");
+
+// group_all
+var ga = $regx_group_all("(\\d+)-(\\d+)", "1-2 3-4");
+check($vec_size(ga) == 2, "group_all count");
+check(ga[0][0] == "1" && ga[0][1] == "2", "group_all first");
+check(ga[1][0] == "3" && ga[1][1] == "4", "group_all second");
+
+// replace
+check($regx_replace("\\d+", "abc123def", "X") == "abcXdef", "re_replace first");
+check($regx_replace_all("\\d+", "a1b2c3", "X") == "aXbXcX", "re_replace_all");
+
+// split
+var sp = $regx_split("\\s+", "a  b   c");
+check($vec_size(sp) == 3, "re_split count");
+check(sp[0] == "a" && sp[1] == "b" && sp[2] == "c", "re_split values");
+
+// error: invalid pattern
+var got = false;
+try { $regx_match("[bad", "x"); } catch (e) { got = e.what == "RuntimeError"; }
+check(got, "re invalid pattern -> RuntimeError");
+
+$io_print("= $regx_ extends OK =\n");

@@ -1,0 +1,488 @@
+{
+  "defines": {
+    "math_PI": {
+      "type": "float",
+      "value": 3.141592653589793,
+      "desc": "π"
+    },
+    "math_E": {
+      "type": "float",
+      "value": 2.718281828459045,
+      "desc": "Euler's number"
+    }
+  },
+  "functions": {
+    "math_abs": [
+      {
+        "desc": "absolute value",
+        "param": [
+          {
+            "key": "x",
+            "type": "float",
+            "desc": "number"
+          }
+        ],
+        "ret": {
+          "type": "float",
+          "desc": "|x|"
+        }
+      }
+    ],
+    "math_acos": [
+      {
+        "desc": "arccosine",
+        "param": [
+          {
+            "key": "x",
+            "type": "float",
+            "desc": "[-1, 1]"
+          }
+        ],
+        "ret": {
+          "type": "float",
+          "desc": "acos(x) in radians"
+        }
+      }
+    ],
+    "math_asin": [
+      {
+        "desc": "arcsine",
+        "param": [
+          {
+            "key": "x",
+            "type": "float",
+            "desc": "[-1, 1]"
+          }
+        ],
+        "ret": {
+          "type": "float",
+          "desc": "asin(x) in radians"
+        }
+      }
+    ],
+    "math_atan": [
+      {
+        "desc": "arctangent",
+        "param": [
+          {
+            "key": "x",
+            "type": "float",
+            "desc": "number"
+          }
+        ],
+        "ret": {
+          "type": "float",
+          "desc": "atan(x) in radians"
+        }
+      }
+    ],
+    "math_atan2": [
+      {
+        "desc": "atan of y/x with quadrant",
+        "param": [
+          {
+            "key": "y",
+            "type": "float",
+            "desc": "number"
+          },
+          {
+            "key": "x",
+            "type": "float",
+            "desc": "number"
+          }
+        ],
+        "ret": {
+          "type": "float",
+          "desc": "atan2(y, x) in radians"
+        }
+      }
+    ],
+    "math_cbrt": [
+      {
+        "desc": "cube root",
+        "param": [
+          {
+            "key": "x",
+            "type": "float",
+            "desc": "number"
+          }
+        ],
+        "ret": {
+          "type": "float",
+          "desc": "cbrt(x)"
+        }
+      }
+    ],
+    "math_ceil": [
+      {
+        "desc": "round up",
+        "param": [
+          {
+            "key": "x",
+            "type": "float",
+            "desc": "number"
+          }
+        ],
+        "ret": {
+          "type": "float",
+          "desc": "ceil(x)"
+        }
+      }
+    ],
+    "math_clamp": [
+      {
+        "desc": "clamp into [lo, hi]",
+        "param": [
+          {
+            "key": "v",
+            "type": "float",
+            "desc": "number"
+          },
+          {
+            "key": "lo",
+            "type": "float",
+            "desc": "lower bound"
+          },
+          {
+            "key": "hi",
+            "type": "float",
+            "desc": "upper bound"
+          }
+        ],
+        "ret": {
+          "type": "float",
+          "desc": "clamped value"
+        }
+      }
+    ],
+    "math_cos": [
+      {
+        "desc": "cosine",
+        "param": [
+          {
+            "key": "x",
+            "type": "float",
+            "desc": "radians"
+          }
+        ],
+        "ret": {
+          "type": "float",
+          "desc": "cos(x)"
+        }
+      }
+    ],
+    "math_deg": [
+      {
+        "desc": "radians to degrees",
+        "param": [
+          {
+            "key": "rad",
+            "type": "float",
+            "desc": "radians"
+          }
+        ],
+        "ret": {
+          "type": "float",
+          "desc": "degrees"
+        }
+      }
+    ],
+    "math_exp": [
+      {
+        "desc": "e raised to x",
+        "param": [
+          {
+            "key": "x",
+            "type": "float",
+            "desc": "number"
+          }
+        ],
+        "ret": {
+          "type": "float",
+          "desc": "exp(x)"
+        }
+      }
+    ],
+    "math_floor": [
+      {
+        "desc": "round down",
+        "param": [
+          {
+            "key": "x",
+            "type": "float",
+            "desc": "number"
+          }
+        ],
+        "ret": {
+          "type": "float",
+          "desc": "floor(x)"
+        }
+      }
+    ],
+    "math_fmod": [
+      {
+        "desc": "floating remainder",
+        "param": [
+          {
+            "key": "a",
+            "type": "float",
+            "desc": "number"
+          },
+          {
+            "key": "b",
+            "type": "float",
+            "desc": "number != 0"
+          }
+        ],
+        "ret": {
+          "type": "float",
+          "desc": "fmod(a, b)"
+        }
+      }
+    ],
+    "math_hypot": [
+      {
+        "desc": "hypotenuse sqrt(a^2+b^2)",
+        "param": [
+          {
+            "key": "a",
+            "type": "float",
+            "desc": "number"
+          },
+          {
+            "key": "b",
+            "type": "float",
+            "desc": "number"
+          }
+        ],
+        "ret": {
+          "type": "float",
+          "desc": "hypot(a, b)"
+        }
+      }
+    ],
+    "math_ln": [
+      {
+        "desc": "natural logarithm",
+        "param": [
+          {
+            "key": "x",
+            "type": "float",
+            "desc": "number > 0"
+          }
+        ],
+        "ret": {
+          "type": "float",
+          "desc": "ln(x)"
+        }
+      }
+    ],
+    "math_log10": [
+      {
+        "desc": "base-10 logarithm",
+        "param": [
+          {
+            "key": "x",
+            "type": "float",
+            "desc": "number > 0"
+          }
+        ],
+        "ret": {
+          "type": "float",
+          "desc": "log10(x)"
+        }
+      }
+    ],
+    "math_log2": [
+      {
+        "desc": "base-2 logarithm",
+        "param": [
+          {
+            "key": "x",
+            "type": "float",
+            "desc": "number > 0"
+          }
+        ],
+        "ret": {
+          "type": "float",
+          "desc": "log2(x)"
+        }
+      }
+    ],
+    "math_max": [
+      {
+        "desc": "larger of two",
+        "param": [
+          {
+            "key": "a",
+            "type": "float",
+            "desc": "number"
+          },
+          {
+            "key": "b",
+            "type": "float",
+            "desc": "number"
+          }
+        ],
+        "ret": {
+          "type": "float",
+          "desc": "max(a, b)"
+        }
+      }
+    ],
+    "math_min": [
+      {
+        "desc": "smaller of two",
+        "param": [
+          {
+            "key": "a",
+            "type": "float",
+            "desc": "number"
+          },
+          {
+            "key": "b",
+            "type": "float",
+            "desc": "number"
+          }
+        ],
+        "ret": {
+          "type": "float",
+          "desc": "min(a, b)"
+        }
+      }
+    ],
+    "math_pow": [
+      {
+        "desc": "a raised to b",
+        "param": [
+          {
+            "key": "a",
+            "type": "float",
+            "desc": "base"
+          },
+          {
+            "key": "b",
+            "type": "float",
+            "desc": "exponent"
+          }
+        ],
+        "ret": {
+          "type": "float",
+          "desc": "pow(a, b)"
+        }
+      }
+    ],
+    "math_rad": [
+      {
+        "desc": "degrees to radians",
+        "param": [
+          {
+            "key": "deg",
+            "type": "float",
+            "desc": "degrees"
+          }
+        ],
+        "ret": {
+          "type": "float",
+          "desc": "radians"
+        }
+      }
+    ],
+    "math_round": [
+      {
+        "desc": "round to nearest",
+        "param": [
+          {
+            "key": "x",
+            "type": "float",
+            "desc": "number"
+          }
+        ],
+        "ret": {
+          "type": "float",
+          "desc": "round(x)"
+        }
+      }
+    ],
+    "math_sign": [
+      {
+        "desc": "sign of x (-1/0/1)",
+        "param": [
+          {
+            "key": "x",
+            "type": "float",
+            "desc": "number"
+          }
+        ],
+        "ret": {
+          "type": "float",
+          "desc": "-1, 0 or 1"
+        }
+      }
+    ],
+    "math_sin": [
+      {
+        "desc": "sine",
+        "param": [
+          {
+            "key": "x",
+            "type": "float",
+            "desc": "radians"
+          }
+        ],
+        "ret": {
+          "type": "float",
+          "desc": "sin(x)"
+        }
+      }
+    ],
+    "math_sqrt": [
+      {
+        "desc": "square root",
+        "param": [
+          {
+            "key": "x",
+            "type": "float",
+            "desc": "number"
+          }
+        ],
+        "ret": {
+          "type": "float",
+          "desc": "sqrt(x)"
+        }
+      }
+    ],
+    "math_tan": [
+      {
+        "desc": "tangent",
+        "param": [
+          {
+            "key": "x",
+            "type": "float",
+            "desc": "radians"
+          }
+        ],
+        "ret": {
+          "type": "float",
+          "desc": "tan(x)"
+        }
+      }
+    ],
+    "math_trunc": [
+      {
+        "desc": "truncate fraction",
+        "param": [
+          {
+            "key": "x",
+            "type": "float",
+            "desc": "number"
+          }
+        ],
+        "ret": {
+          "type": "float",
+          "desc": "trunc(x)"
+        }
+      }
+    ]
+  }
+}

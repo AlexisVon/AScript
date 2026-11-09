@@ -1,0 +1,83 @@
+{
+  "functions": {
+    "list": [
+      {
+        "desc": "list the models available on a remote instance",
+        "param": [
+          {"key": "host", "type": "string", "desc": "host:port"},
+          {"key": "timeout", "type": "int", "optional": true, "default": 5, "desc": "seconds"}
+        ],
+        "ret": {"type": "vec|string", "desc": "models, or an error string"}
+      }
+    ],
+    "show": [
+      {
+        "desc": "show the details of a remote model",
+        "param": [
+          {"key": "addr", "type": "string", "desc": "host:port"},
+          {"key": "model", "type": "string", "desc": "model name"},
+          {"key": "timeout", "type": "int", "optional": true, "default": 5, "desc": "seconds"}
+        ],
+        "ret": {"type": "string", "desc": "raw response, or null"}
+      }
+    ],
+    "connect": [
+      {
+        "desc": "connect and create a named instance",
+        "param": [
+          {"key": "key", "type": "string", "desc": "instance name (area key)"},
+          {"key": "host", "type": "string", "desc": "host:port"},
+          {"key": "model", "type": "string", "desc": "model name"},
+          {"key": "timeout", "type": "int", "optional": true, "default": 10, "desc": "seconds"}
+        ],
+        "ret": {"type": "bool", "desc": "true on success"}
+      }
+    ]
+  },
+  "areas": {
+    "*": {
+      "functions": {
+        "chat": [
+          {
+            "desc": "chat with history",
+            "param": [
+              {"key": "input", "type": "string|map|vec", "desc": "message(s)"},
+              {"key": "options", "type": "map", "optional": true, "desc": "generation options"}
+            ],
+            "ret": {"type": "string", "desc": "reply, or null"}
+          }
+        ],
+        "generate": [
+          {
+            "desc": "single generation without history",
+            "param": [
+              {"key": "prompt", "type": "string", "desc": "prompt"},
+              {"key": "options", "type": "map", "optional": true, "desc": "generation options"}
+            ],
+            "ret": {"type": "string", "desc": "reply, or null"}
+          }
+        ],
+        "show": [
+          {
+            "desc": "show the connected model",
+            "param": [],
+            "ret": {"type": "string", "desc": "raw response"}
+          }
+        ],
+        "clear": [
+          {
+            "desc": "clear the chat history",
+            "param": []
+          }
+        ],
+        "alive": [
+          {
+            "desc": "connection state",
+            "param": [],
+            "ret": {"type": "bool", "desc": "true when connected"}
+          }
+        ]
+      }
+    }
+  }
+}

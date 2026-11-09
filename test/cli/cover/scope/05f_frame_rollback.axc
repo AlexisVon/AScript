@@ -1,0 +1,10 @@
+// Test 5f: 帧退出回滚
+var outer; outer = 1;
+{
+    var inner; inner = 2;
+    outer = 99;
+}
+if (outer == 99) { $io_print("PASS: 5f outer mod persists\n"); } else { $io_print("FAIL\n"); }
+var caught; caught = false;
+try { tmp = inner; } catch (e) { caught = true; }
+if (caught) { $io_print("PASS: 5f inner destroyed on frame exit\n"); } else { $io_print("FAIL\n"); }

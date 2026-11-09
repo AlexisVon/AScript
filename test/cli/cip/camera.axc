@@ -1,0 +1,80 @@
+// CameraArea[0][0,101]: the camera control area of one station -- the handshake a vision client
+// and the machine run per workpiece. Row 0: [0]=data valid, [1]=read ack, [3]=image source,
+// [5]=station, [10,41]=workpiece id (31 bytes, ASCII, zero padded). A BYTE area: one element is
+// one byte, so a run comes back as bytes and vec(string(...)) takes it apart.
+//
+// This script is both ends: the machine (a server handle whose table the wire serves) and the
+// vision client (a client handle over that wire). The client waits for [0][0]==1, reads [0][0,61]
+// in one request, takes its fields, and answers [0][1]=1; the machine waits 100 ms for that
+// answer, and a piece it never gets is recorded, cleared and left behind.
+
+link "cip.so" as cip;
+
+var cam_addr = "127.0.0.1:44837";
+var srv = cip.listen(cam_addr);
+cip.define_byte(srv, "CameraArea", [1, 101]);
+var cli = cip.open(cam_addr, 2000);
+cip.define_byte(cli, "CameraArea", [1, 101]);
+
+def valid(v) { return v == 1; }
+def acked(v) { return v == 1; }
+
+// The 31-element id slice back out as text: everything up to the first zero byte.
+def cell_id(field) {
+    var out = "";
+    for (var b : field) {
+        if (b == 0) break;
+        out += string([b]);
+    }
+    return out;
+}
+
+var pieces = [
+    map{"source": 1, "station": 7, "id": "CELL-0001"},
+    map{"source": 2, "station": 8, "id": "CELL-0002"},
+    map{"source": 1, "station": 9, "id": "CELL-0003"}
+];
+
+for (var i = 0; i < 2; i++) {
+    var p = pieces[i];
+    // Machine: the frame goes in, then the valid flag; the id is a text field, the write pads it.
+    cip.set(srv, "CameraArea[0][3]", p.source);
+    cip.set(srv, "CameraArea[0][5]", p.station);
+    cip.set(srv, "CameraArea[0][10,41]", p.id);
+    cip.set(srv, "CameraArea[0][0]", 1);
+    // Vision: [0][0]==1 marks the data valid -- read the block in one request, take the fields.
+    var seen = cip.wait(cli, "CameraArea[0][0]", valid, 100);
+    var area = vec(string(cip.get(cli, "CameraArea[0][0,61]")));
+    var source = area[3];
+    var station = area[5];
+    var cell = cell_id(area[10, 41]);
+    cip.set(cli, "CameraArea[0][1]", 1); // read
+    // Machine: the answer ends the piece; clear the flags for the next one.
+    var back = cip.wait(srv, "CameraArea[0][1]", acked, 100);
+    $io_print("piece %1: wait=%2 ack=%3 source=%4 station=%5 cell=%6\n", i, seen, back, source,
+              station, cell);
+    cip.set(srv, "CameraArea[0][0,2]", [0, 0]);
+}
+
+// The last piece: the client reads it but never answers -- the machine's 100 ms runs out, it
+// records the timeout, clears the area and is ready for the next piece.
+cip.set(srv, "CameraArea[0][3]", pieces[2].source);
+cip.set(srv, "CameraArea[0][5]", pieces[2].station);
+cip.set(srv, "CameraArea[0][10,41]", pieces[2].id);
+cip.set(srv, "CameraArea[0][0]", 1);
+var seen = cip.wait(cli, "CameraArea[0][0]", valid, 100);
+var area = vec(string(cip.get(cli, "CameraArea[0][0,61]")));
+$io_print("piece 2: wait=%1 source=%2 station=%3 cell=%4\n", seen, area[3], area[5],
+          cell_id(area[10, 41]));
+$io_print("timeout=%1 reason=%2\n", cip.wait(srv, "CameraArea[0][1]", acked, 100), cip.error(srv));
+cip.set(srv, "CameraArea[0][0,101]", [0:101]); // clear, ready for the next piece
+$io_print("after clear=%1\n", vec(string(cip.get(cli, "CameraArea[0][0,3]"))));
+
+// The 2-D view of the same area: one index is the row (a byte run, back as bytes), no index is the
+// whole point -- its shape is the declaration.
+$io_print("row=%1\n", vec(string(cip.get(cli, "CameraArea[0][0,3]"))));
+var whole = vec(string(cip.get(cli, "CameraArea")));
+$io_print("whole=%1%2%3 shape=%4\n", whole[0], whole[1], whole[2], cip.points(srv)["CameraArea"]);
+
+cip.close(cli);
+cip.close(srv);

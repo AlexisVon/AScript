@@ -1,0 +1,35 @@
+// $sys_datetime() — current local time as a numeric map
+// 8 numeric fields: year month day h m s ms us
+
+// 1. 结构：map + 8 个数字字段
+var t = $sys_datetime();
+if (type(t) != "map") { $io_print("FAIL DT.1 type"); throw("assert"); }
+if (t.year < 2020 || t.year > 2100) { $io_print("FAIL DT.1 year: ", t.year); throw("assert"); }
+if (t.month < 1 || t.month > 12) { $io_print("FAIL DT.1 month"); throw("assert"); }
+if (t.day < 1 || t.day > 31) { $io_print("FAIL DT.1 day"); throw("assert"); }
+if (t.h < 0 || t.h > 23) { $io_print("FAIL DT.1 h"); throw("assert"); }
+if (t.m < 0 || t.m > 59) { $io_print("FAIL DT.1 m"); throw("assert"); }
+if (t.s < 0 || t.s > 59) { $io_print("FAIL DT.1 s"); throw("assert"); }
+if (t.ms < 0 || t.ms > 999) { $io_print("FAIL DT.1 ms"); throw("assert"); }
+if (t.us < 0 || t.us > 999999) { $io_print("FAIL DT.1 us"); throw("assert"); }
+$io_print("DT.1 fields: y=", t.year, " mo=", t.month, " d=", t.day,
+       " h=", t.h, " m=", t.m, " s=", t.s, " ms=", t.ms, " us=", t.us);
+$io_print("OK");
+
+// 2. 同一快照：ms 与 us 一致（us = ms*1000 + 余量）
+if (t.us < t.ms * 1000 || t.us >= (t.ms + 1) * 1000) {
+    $io_print("FAIL DT.2 ms/us mismatch: ", t.ms, " ", t.us);
+    throw("assert");
+}
+$io_print("OK");
+
+// 3. 可组合进表达式
+var t2 = $sys_datetime();
+var y3 = t2.year;
+if (y3 < 2020 || y3 > 2100) { $io_print("FAIL DT.3"); throw("assert"); }
+$io_print("OK");
+
+// 4. 反射调用
+var t3 = @("$sys_datetime")();
+if (t3.year < 2020 || t3.year > 2100) { $io_print("FAIL DT.4"); throw("assert"); }
+$io_print("OK");

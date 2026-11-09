@@ -1,0 +1,57 @@
+link "cv.so" as cv;
+
+var img = cv.create(8, 8, "8uc3");
+
+try {
+    cv.imread("/tmp/axc_cv_missing.png");
+} catch (e) {
+    $io_print("imread: %1\n", e.what);
+}
+
+try {
+    cv.info(42);
+} catch (e) {
+    $io_print("info: %1\n", e.what);
+}
+
+try {
+    cv.crop(img, 0, 0, 100, 100);
+} catch (e) {
+    $io_print("crop: %1\n", e.what);
+}
+
+try {
+    cv.merge(vec[]);
+} catch (e) {
+    $io_print("merge: %1\n", e.what);
+}
+
+try {
+    cv.resize(img, 0, 0);
+} catch (e) {
+    $io_print("resize: %1\n", e.what);
+}
+
+try {
+    cv.cvt_color(img, "nope");
+} catch (e) {
+    $io_print("cvt_color: %1\n", e.what);
+}
+
+try {
+    cv.threshold(img, 1, 2, "nope");
+} catch (e) {
+    $io_print("threshold: %1\n", e.what);
+}
+
+try {
+    cv.imencode(img, "nope");
+} catch (e) {
+    $io_print("imencode: %1\n", e.what);
+}
+
+try {
+    cv.convert(img, "8uc1");
+} catch (e) {
+    $io_print("convert: %1\n", e.what);
+}

@@ -1,0 +1,6 @@
+// Test 3f: def x -> 再 no-var x = 1 (重赋值) -> NameError
+def f3() { return 1; }
+var caught; caught = false;
+try { f3 = 1; } catch (e) { caught = true; }
+if (caught) { $io_print("PASS: 3f def->reassign throws NameError\n"); }
+else { $io_print("FAIL: 3f no error\n"); }

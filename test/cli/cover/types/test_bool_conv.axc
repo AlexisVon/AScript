@@ -1,0 +1,38 @@
+// 3.6 真值规则 — bool() 显式转换
+$io_print("--- test_bool_conv ---");
+
+// bool(int/float/bool)
+$io_print("bool(42) = %1", bool(42));
+$io_print("bool(0) = %1", bool(0));
+$io_print("bool(-1) = %1", bool(-1));
+$io_print("bool(3.14) = %1", bool(3.14));
+$io_print("bool(0.0) = %1", bool(0.0));
+$io_print("bool(true) = %1", bool(true));
+$io_print("bool(false) = %1", bool(false));
+
+// bool(string): "true"(4字节, 大小写不敏感) → true, 其余 → false
+var str_true  = "true";
+var str_True  = "True";
+var str_TRUE  = "TRUE";
+var str_false = "false";
+var str_empty = "";
+var str_hello = "hello";
+var str_truex = "truex";
+$io_print("bool(true) = %1", bool(str_true));
+$io_print("bool(True) = %1", bool(str_True));
+$io_print("bool(TRUE) = %1", bool(str_TRUE));
+$io_print("bool(false) = %1", bool(str_false));
+$io_print("bool(empty) = %1", bool(str_empty));
+$io_print("bool(hello) = %1", bool(str_hello));
+$io_print("bool(truex) = %1", bool(str_truex));
+
+// bool(vec/map/lst): 非空 → true, 空 → false
+$io_print("bool([1,2]) = %1", bool([1, 2]));
+$io_print("bool([]) = %1", bool([]));
+$io_print("bool(map{a:1}) = %1", bool(map{"a": 1}));
+$io_print("bool(map{}) = %1", bool(map{}));
+$io_print("bool(lst[1,2]) = %1", bool(lst[1, 2]));
+$io_print("bool(lst[]) = %1", bool(lst[]));
+
+// bool(null) → false
+$io_print("bool(null) = %1", bool(null));

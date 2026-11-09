@@ -1,0 +1,11 @@
+// Test: nested try/catch
+try {
+    try {
+        throw "inner error";
+    } catch (e) {
+        $io_print("inner caught: what=%1, info=%2\n", e.what, e.info);
+    }
+    $io_print("after inner try\n");
+} catch (e) {
+    $io_print("outer caught: what=%1, info=%2\n", e.what, e.info);
+}

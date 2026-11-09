@@ -1,0 +1,338 @@
+{
+  "keywords": {
+    "var": [
+      {
+        "sig": "var name [= value];"
+      },
+      {
+        "sig": "var a = 1, b, c = 3;"
+      }
+    ],
+    "int": [
+      {
+        "sig": "int name [= value];"
+      },
+      {
+        "sig": "int a = 1, b, c = 3;"
+      }
+    ],
+    "float": [
+      {
+        "sig": "float name [= value];"
+      },
+      {
+        "sig": "float a = 1.0, b = 2.0;"
+      }
+    ],
+    "string": [
+      {
+        "sig": "string name [= value];"
+      },
+      {
+        "sig": "string a = \"hi\", b = \"lo\";"
+      }
+    ],
+    "bool": [
+      {
+        "sig": "bool name [= value];"
+      },
+      {
+        "sig": "bool a = true, b = false;"
+      }
+    ],
+    "bytes": [
+      {
+        "sig": "bytes name [= value];"
+      },
+      {
+        "sig": "bytes a = bytes(), b = f();"
+      }
+    ],
+    "vec": [
+      {
+        "sig": "vec name [= value];"
+      },
+      {
+        "sig": "vec a = [1,2], b = [3,4];"
+      }
+    ],
+    "lst": [
+      {
+        "sig": "lst name [= value];"
+      },
+      {
+        "sig": "lst a = lst[1,2], b = lst[3,4];"
+      }
+    ],
+    "map": [
+      {
+        "sig": "map name [= value];"
+      },
+      {
+        "sig": "map a = map{\"k\":\"v\"}, b = map{};"
+      }
+    ],
+    "def": [
+      {
+        "sig": "def name(args [= default], ...) { }"
+      }
+    ],
+    "if": [
+      {
+        "sig": "if (cond) { }"
+      },
+      {
+        "sig": "if (cond) {} else {}"
+      },
+      {
+        "sig": "if (cond) {} else if (cond2) {} else {}"
+      }
+    ],
+    "else": [
+      {
+        "sig": "else { }"
+      }
+    ],
+    "while": [
+      {
+        "sig": "while (cond) { }"
+      }
+    ],
+    "for": [
+      {
+        "sig": "for (init; cond; step) { }"
+      },
+      {
+        "sig": "for (var x : coll) { }"
+      },
+      {
+        "sig": "for (int x : coll) { }"
+      },
+      {
+        "sig": "for (;;) { }"
+      }
+    ],
+    "break": [
+      {
+        "sig": "break;"
+      }
+    ],
+    "continue": [
+      {
+        "sig": "continue;"
+      }
+    ],
+    "return": [
+      {
+        "sig": "return;"
+      },
+      {
+        "sig": "return expr;"
+      }
+    ],
+    "import": [
+      {
+        "sig": "import \"path\" as alias;"
+      }
+    ],
+    "link": [
+      {
+        "sig": "link \"lib.so\" as alias;"
+      }
+    ],
+    "as": [
+      {
+        "sig": "... as alias"
+      }
+    ],
+    "try": [
+      {
+        "sig": "try { }"
+      }
+    ],
+    "catch": [
+      {
+        "sig": "catch (e) { }"
+      }
+    ],
+    "throw": [
+      {
+        "sig": "throw expr;"
+      }
+    ],
+    "switch": [
+      {
+        "sig": "switch (x) { case val: ...; default: ...; }"
+      }
+    ],
+    "case": [
+      {
+        "sig": "case val:"
+      }
+    ],
+    "default": [
+      {
+        "sig": "default:"
+      }
+    ],
+    "delete": [
+      {
+        "sig": "delete name;"
+      },
+      {
+        "sig": "delete var[key];"
+      },
+      {
+        "sig": "delete alias;"
+      }
+    ]
+  },
+  "literals": {
+    "true": [],
+    "false": [],
+    "null": [],
+    "nan": [],
+    "inf": []
+  },
+  "builtins": {
+    "int": [
+      {
+        "sig": "int(v) → int"
+      },
+      {
+        "sig": "int() → 0"
+      }
+    ],
+    "float": [
+      {
+        "sig": "float(v) → float"
+      },
+      {
+        "sig": "float() → 0.0"
+      }
+    ],
+    "string": [
+      {
+        "sig": "string(v) → string"
+      },
+      {
+        "sig": "string(int, base) → string",
+        "params": [
+          "v",
+          "base"
+        ]
+      },
+      {
+        "sig": "string(double, prec) → string",
+        "params": [
+          "v",
+          "prec"
+        ]
+      },
+      {
+        "sig": "string(fmt, args...) → string",
+        "params": [
+          "fmt",
+          "args"
+        ]
+      },
+      {
+        "sig": "string(bytes, enc) → string",
+        "params": [
+          "b",
+          "enc"
+        ]
+      },
+      {
+        "sig": "string() → \"\""
+      }
+    ],
+    "bool": [
+      {
+        "sig": "bool(v) → bool"
+      },
+      {
+        "sig": "bool() → false"
+      }
+    ],
+    "bytes": [
+      {
+        "sig": "bytes(str) → bytes",
+        "params": [
+          "str"
+        ]
+      },
+      {
+        "sig": "bytes(str, enc) → bytes",
+        "params": [
+          "str",
+          "enc"
+        ]
+      },
+      {
+        "sig": "string(bytes, enc) → string",
+        "params": [
+          "b",
+          "enc"
+        ]
+      },
+      {
+        "sig": "bytes() → 空 bytes"
+      }
+    ],
+    "type": [
+      {
+        "sig": "type(v) → string",
+        "params": [
+          "v"
+        ]
+      }
+    ],
+    "env": [
+      {
+        "sig": "env(paths)",
+        "params": [
+          "paths"
+        ]
+      }
+    ],
+    "here": [
+      {
+        "sig": "here() → map{row, col, ofst, file}"
+      }
+    ],
+    "eval": [
+      {
+        "sig": "eval(str) → any",
+        "params": [
+          "str"
+        ]
+      },
+      {
+        "sig": "eval(str, map) → any",
+        "params": [
+          "str",
+          "map"
+        ]
+      }
+    ],
+    "trap": [
+      {
+        "sig": "trap()"
+      },
+      {
+        "sig": "trap(args)",
+        "params": [
+          "args"
+        ]
+      },
+      {
+        "sig": "trap(cond, args)",
+        "params": [
+          "cond",
+          "args"
+        ]
+      }
+    ]
+  }
+}

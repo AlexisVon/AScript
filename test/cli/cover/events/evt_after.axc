@@ -1,0 +1,88 @@
+// evt_after — deliveries queue into the engine and run at the script's yield() points
+
+var passed = 0;
+var failed = 0;
+
+def check(cond, name) {
+    if (cond) { passed = passed + 1; }
+    else { failed = failed + 1; $io_print("FAIL %1\n", name); }
+}
+def check_eq(a, b, name) {
+    check(a == b, name);
+}
+
+// ── immediate enqueue, serviced at yield ──
+var total = 0;
+def add(v) { total = total + v; }
+
+check_eq($evt_after(0, "add", 5), true, "evt_after(0) accepted");
+check_eq(total, 0, "not serviced before yield");
+yield();
+check_eq(total, 5, "serviced at the next yield");
+
+// ── a delayed delivery is not eligible early ──
+var later = 0;
+def later_add(v) { later = later + v; }
+$evt_after(50, "later_add", 7);
+yield();
+check_eq(later, 0, "delayed delivery is not serviced early");
+yield(500);
+check_eq(later, 7, "delayed delivery serviced once due");
+
+// ── arguments are captured at call time ──
+var cap = 0;
+def take(v) { cap = v; }
+var x = 1;
+$evt_after(0, "take", x);
+x = 99;
+yield();
+check_eq(cap, 1, "arguments captured at enqueue time");
+
+// ── the target name is resolved when serviced ──
+var late = 0;
+$evt_after(0, "defined_later", 3);
+def defined_later(v) { late = v; }
+yield();
+check_eq(late, 3, "a def defined after the enqueue resolves when serviced");
+
+// ── queue-full refusal, then recovery by draining ──
+var acc = 0;
+def noop(v) { }
+for (var i = 0; i < 300; i = i + 1) {
+    if ($evt_after(0, "noop", i)) { acc = acc + 1; }
+}
+check(acc > 0 && acc < 300, "queue full refuses further deliveries");
+check_eq($evt_after(0, "noop", 1), false, "refusal returns false");
+yield(0, 1000);
+check_eq($evt_after(0, "noop", 1), true, "queue accepts again after draining");
+yield();
+
+// ── argument validation ──
+var caught = false;
+try { $evt_after(-1, "noop"); } catch (e) { caught = true; }
+check(caught, "negative delay raises");
+
+caught = false;
+try { $evt_after("x", "noop"); } catch (e) { caught = true; }
+check(caught, "non-int delay raises");
+
+caught = false;
+try { $evt_after(0, 42); } catch (e) { caught = true; }
+check(caught, "non-string name raises");
+
+caught = false;
+try { $evt_after(0); } catch (e) { caught = true; }
+check(caught, "missing name raises");
+
+// ── handler failures stay inside the delivery ──
+def boom() { throw "boom"; }
+$evt_after(0, "boom");
+yield();
+check(true, "a throwing handler does not affect the main script");
+
+$evt_after(0, "no_such_def");
+yield();
+check(true, "a missing def does not affect the main script");
+
+$io_print("--- evt_after: %1 passed, %2 failed ---\n", string(passed), string(failed));
+if (failed > 0) { throw "evt_after: " + string(failed) + " failed"; }

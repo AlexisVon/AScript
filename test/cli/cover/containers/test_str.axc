@@ -1,0 +1,53 @@
+// Cover test: $str_xxx string operations
+
+def check(cond, msg) {
+    if (!cond) throw msg;
+}
+
+// find / rfind
+check($str_find("hello world", "world") == 6, "str_find");
+check($str_find("hello world", "xyz") == -1, "str_find miss");
+check($str_find("hello world", "l") == 2, "str_find first");
+check($str_find("hello world", "l", 3) == 3, "str_find from");
+check($str_rfind("hello world", "l") == 9, "str_rfind");
+check($str_rfind("hello world", "xyz") == -1, "str_rfind miss");
+
+// left / right / mid
+check($str_left("hello", 3) == "hel", "str_left");
+check($str_left("hello", 10) == "hello", "str_left clamp");
+check($str_right("hello", 3) == "llo", "str_right");
+check($str_right("hello", 10) == "hello", "str_right clamp");
+check($str_mid("hello", 1, 3) == "ell", "str_mid");
+check($str_mid("hello", 1) == "ello", "str_mid to end");
+check($str_mid("hello", 10) == "", "str_mid oob");
+
+// split / join
+var parts = $str_split("a,b,c", ",");
+check($vec_size(parts) == 3, "split count");
+check(parts[0] == "a" && parts[1] == "b" && parts[2] == "c", "split values");
+check($str_join(parts, "-") == "a-b-c", "str_join");
+check($str_join(["x"], ",") == "x", "str_join single");
+
+// replace
+check($str_replace("hello world", "world", "ax") == "hello ax", "str_replace");
+check($str_replace("aaa", "a", "bb") == "bbbbbb", "str_replace all");
+check($str_replace("hello", "xyz", "q") == "hello", "str_replace miss");
+
+// upper / lower
+check($str_upper("Hello") == "HELLO", "str_upper");
+check($str_lower("Hello") == "hello", "str_lower");
+
+// trim
+check($str_trim("  hi  ") == "hi", "str_trim default");
+check($str_trim("xxhixx", "x") == "hi", "str_trim chars");
+check($str_trim("") == "", "str_trim empty");
+
+// starts / ends / contains
+check($str_starts("hello", "hel"), "str_starts true");
+check(!$str_starts("hello", "xyz"), "str_starts false");
+check($str_ends("hello", "llo"), "str_ends true");
+check(!$str_ends("hello", "xyz"), "str_ends false");
+check($str_contains("hello", "ell"), "str_contains true");
+check(!$str_contains("hello", "xyz"), "str_contains false");
+
+$io_print("= $str_ extends OK =\n");

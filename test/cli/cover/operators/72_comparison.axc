@@ -1,0 +1,121 @@
+// §7.2 Comparison — ==, !=, <, >, <=, >=, int/float auto-convert, string, null, cross-type
+
+var passed; passed = 0;
+var failed; failed = 0;
+var failures; failures = "";
+
+def to_str(v) { if (v == null) { return "null"; } return string(v); }
+
+def assert_eq(actual, expected, name) {
+    if (actual == expected) { passed = passed + 1; return; }
+    failed = failed + 1;
+    failures = failures + "  FAIL " + name + ": expected " + to_str(expected) + " got " + to_str(actual) + "\n";
+}
+
+def assert_true(cond, name) {
+    if (cond) { passed = passed + 1; return; }
+    failed = failed + 1;
+    failures = failures + "  FAIL " + name + ": expected true\n";
+}
+
+def assert_false(cond, name) {
+    if (!cond) { passed = passed + 1; return; }
+    failed = failed + 1;
+    failures = failures + "  FAIL " + name + ": expected false\n";
+}
+
+// --- int comparison ---
+assert_true(1 == 1, "int == equal");
+assert_false(1 == 2, "int == not equal");
+assert_true(1 != 2, "int != not equal");
+assert_false(1 != 1, "int != equal");
+assert_true(1 < 2, "int <");
+assert_false(2 < 1, "int < false");
+assert_true(2 > 1, "int >");
+assert_false(1 > 2, "int > false");
+assert_true(1 <= 1, "int <= equal");
+assert_true(1 <= 2, "int <= less");
+assert_false(2 <= 1, "int <= false");
+assert_true(2 >= 2, "int >= equal");
+assert_true(2 >= 1, "int >= greater");
+assert_false(1 >= 2, "int >= false");
+
+// --- float comparison ---
+assert_true(1.5 == 1.5, "float == equal");
+assert_true(1.5 != 2.5, "float != not equal");
+assert_true(1.5 < 2.5, "float <");
+assert_true(2.5 > 1.5, "float >");
+assert_true(1.5 <= 1.5, "float <= equal");
+assert_true(2.5 >= 2.5, "float >= equal");
+
+// --- int<->float auto-convert comparison ---
+assert_true(1 == 1.0, "int 1 == float 1.0");
+assert_true(1.0 == 1, "float 1.0 == int 1");
+assert_true(1 < 1.5, "int 1 < float 1.5");
+assert_true(2.5 > 2, "float 2.5 > int 2");
+assert_true(2 <= 2.0, "int 2 <= float 2.0");
+assert_true(3.0 >= 3, "float 3.0 >= int 3");
+assert_false(1 == 1.5, "int 1 == float 1.5 false");
+assert_false(1.5 == 1, "float 1.5 == int 1 false");
+
+// --- string comparison (lexicographic) ---
+assert_true("a" < "b", "string lex a < b");
+assert_true("b" > "a", "string lex b > a");
+assert_true("abc" == "abc", "string equal");
+assert_true("abc" != "def", "string not equal");
+assert_true("a" <= "a", "string <= equal");
+assert_true("a" <= "b", "string <= less");
+assert_true("b" >= "a", "string >= greater");
+assert_true("abc" < "abcd", "string prefix < longer");
+assert_true("ABC" < "abc", "string case sensitive (ASCII)");
+
+// --- string<->number cross-comparison -> TypeError (strict type system) ---
+var cstr1; cstr1 = false; try { tmp = "123" == 123; } catch (e) { cstr1 = true; }
+assert_true(cstr1, "string \"123\" == int throws TypeError");
+var cstr2; cstr2 = false; try { tmp = 123 == "123"; } catch (e) { cstr2 = true; }
+assert_true(cstr2, "int 123 == string \"123\" throws TypeError");
+var cstr3; cstr3 = false; try { tmp = "3.14" == 3.14; } catch (e) { cstr3 = true; }
+assert_true(cstr3, "string \"3.14\" == float throws TypeError");
+var cstr4; cstr4 = false; try { tmp = "0" == 0; } catch (e) { cstr4 = true; }
+assert_true(cstr4, "string \"0\" == int throws TypeError");
+
+// Non-numeric string with number -> TypeError
+var cstr; cstr = false;
+try { tmp = "abc" == 123; } catch (e) { cstr = true; }
+assert_true(cstr, "string \"abc\" == int throws TypeError");
+
+// --- null comparison ---
+assert_true(null == null, "null == null");
+assert_false(null != null, "null != null");
+assert_false(null == 1, "null == 1 false");
+assert_false(1 == null, "1 == null false");
+assert_true(null != 1, "null != 1 true");
+assert_true(1 != null, "1 != null true");
+assert_false(null == "abc", "null == string false");
+assert_false(null == true, "null == bool false");
+
+// --- null ordered comparison -> TypeError ---
+var nc1; nc1 = false; try { tmp = null < 1; } catch (e) { nc1 = true; }
+assert_true(nc1, "null < int -> TypeError");
+var nc2; nc2 = false; try { tmp = null > 1; } catch (e) { nc2 = true; }
+assert_true(nc2, "null > int -> TypeError");
+var nc3; nc3 = false; try { tmp = null <= 1; } catch (e) { nc3 = true; }
+assert_true(nc3, "null <= int -> TypeError");
+var nc4; nc4 = false; try { tmp = null >= 1; } catch (e) { nc4 = true; }
+assert_true(nc4, "null >= int -> TypeError");
+
+// --- cross-type comparison (incompatible types) ---
+var ct1; ct1 = false; try { tmp = [1] == 1; } catch (e) { ct1 = true; }
+assert_true(ct1, "vec == int -> TypeError");
+var ct2; ct2 = false; try { tmp = [1] < 1; } catch (e) { ct2 = true; }
+assert_true(ct2, "vec < int -> TypeError");
+var ct3; ct3 = false; try { tmp = map{} == 1; } catch (e) { ct3 = true; }
+assert_true(ct3, "map == int -> TypeError");
+
+if (failed > 0) {
+    $io_print("\n=== FAIL: 72_comparison ===\n");
+    $io_print("Passed: %1 / %2\n", passed, passed + failed);
+    $io_print("FAILURES:\n%1", failures);
+} else {
+    $io_print("72_comparison: All %1 tests passed\n", passed);
+}

@@ -1,0 +1,14 @@
+{
+  "defines": {
+    "etype": {
+      "type": "string",
+      "value": "axc-1.0",
+      "desc": "engine type identifier"
+    },
+    "vtype": {
+      "type": "int",
+      "value": 0,
+      "desc": "engine version number"
+    }
+  }
+}

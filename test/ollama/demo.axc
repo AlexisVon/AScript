@@ -1,0 +1,32 @@
+link "ollama" as olm;
+var addr = "192.168.31.66:11434";
+var mods = olm.list(addr, 3);
+if (mods == null || type(mods) == "string") {
+    $io_print(mods);
+    return -1;
+}
+var idx = 0;
+for (var it : mods) {
+    $io_print("[%1]: %2<%3>\n", idx++, it["name"], it["size"]);
+}
+$io_print("select model: ");
+idx = int($io_input());
+if (idx < 0 || idx >= mods[null]) {
+    $io_print("error select\n");
+    return -1;
+}
+var modname = mods[idx]["name"];
+if (!olm.connect("mod", addr, modname, 600)) {
+    $io_print("connect failed\n");
+    return -2;
+} else $io_print("connect %1 success\n", modname);
+var cmd;
+while (true) {
+    cmd = $io_input();
+    if (cmd == "exit") break;
+    else if (cmd == "/clear") olm.mod.clear();
+    else if (cmd == "/show")$io_print("[%1]%2\n", modname, olm.mod.show());
+    else $io_print("[%1]%2\n", modname, olm.mod.chat(cmd));
+}
+delete olm.mod;
+$io_print("shutdown\n");

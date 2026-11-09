@@ -1,0 +1,105 @@
+{
+  "functions": {
+    "kv_store": [
+      {
+        "desc": "store a value (literal only, anyptr rejected)",
+        "param": [
+          {
+            "key": "key",
+            "type": "string",
+            "desc": "key name"
+          },
+          {
+            "key": "value",
+            "type": "any",
+            "desc": "literal value (int/float/string/bool/bytes/vec/lst/map, no anyptr)"
+          }
+        ]
+      }
+    ],
+    "kv_load": [
+      {
+        "desc": "load a value by key (void if not found or stored void)",
+        "param": [
+          {
+            "key": "key",
+            "type": "string",
+            "desc": "key name"
+          }
+        ],
+        "ret": {
+          "type": "any",
+          "desc": "stored value or void"
+        }
+      }
+    ],
+    "kv_has": [
+      {
+        "desc": "check if key exists (distinguishes void value from non-existence)",
+        "param": [
+          {
+            "key": "key",
+            "type": "string",
+            "desc": "key name"
+          }
+        ],
+        "ret": {
+          "type": "bool",
+          "desc": "true if key exists"
+        }
+      }
+    ],
+    "kv_rm": [
+      {
+        "desc": "remove a key",
+        "param": [
+          {
+            "key": "key",
+            "type": "string",
+            "desc": "key name"
+          }
+        ],
+        "ret": {
+          "type": "bool",
+          "desc": "true if key existed and was removed"
+        }
+      }
+    ],
+    "kv_cas": [
+      {
+        "desc": "compare-and-swap: swap value if current matches expect",
+        "param": [
+          {
+            "key": "key",
+            "type": "string",
+            "desc": "key name"
+          },
+          {
+            "key": "expect",
+            "type": "any",
+            "desc": "expected value (null = key absent or stored void)"
+          },
+          {
+            "key": "newval",
+            "type": "any",
+            "desc": "new literal value (no anyptr)"
+          }
+        ],
+        "ret": {
+          "type": "bool",
+          "desc": "true if swapped"
+        }
+      }
+    ],
+    "kv_clean": [
+      {
+        "desc": "remove all entries with null/void values (garbage collect)"
+      }
+    ],
+    "kv_clear": [
+      {
+        "desc": "clear all kv entries"
+      }
+    ]
+  }
+}

@@ -1,0 +1,156 @@
+{
+  "functions": {
+    "map_keys": [
+      {
+        "desc": "keys as a vec",
+        "param": [
+          {
+            "key": "map",
+            "type": "map",
+            "desc": "map to inspect (direct reference, zero-copy)"
+          }
+        ],
+        "ret": {
+          "type": "vec",
+          "desc": "key list"
+        }
+      }
+    ],
+    "map_values": [
+      {
+        "desc": "values as a vec",
+        "param": [
+          {
+            "key": "map",
+            "type": "map",
+            "desc": "map to inspect (direct reference, zero-copy)"
+          }
+        ],
+        "ret": {
+          "type": "vec",
+          "desc": "value list"
+        }
+      }
+    ],
+    "map_has": [
+      {
+        "desc": "contains a key",
+        "param": [
+          {
+            "key": "map",
+            "type": "map",
+            "desc": "map to inspect (direct reference, zero-copy)"
+          },
+          {
+            "key": "key",
+            "type": "string",
+            "desc": "key to check"
+          }
+        ],
+        "ret": {
+          "type": "bool",
+          "desc": "true if present (safe — reading a missing key raises KeyError)"
+        }
+      }
+    ],
+    "map_get": [
+      {
+        "desc": "value of a key, or default",
+        "param": [
+          {
+            "key": "map",
+            "type": "map",
+            "desc": "map to inspect (direct reference, zero-copy)"
+          },
+          {
+            "key": "key",
+            "type": "string",
+            "desc": "key to read"
+          },
+          {
+            "key": "default",
+            "type": "any",
+            "optional": true,
+            "desc": "returned if key absent (null if omitted)"
+          }
+        ],
+        "ret": {
+          "type": "any",
+          "desc": "value, default, or null"
+        }
+      }
+    ],
+    "map_size": [
+      {
+        "desc": "number of keys",
+        "param": [
+          {
+            "key": "map",
+            "type": "map",
+            "desc": "map to inspect (direct reference, zero-copy)"
+          }
+        ],
+        "ret": {
+          "type": "int",
+          "desc": "key count"
+        }
+      }
+    ],
+    "map_insert": [
+      {
+        "desc": "set a key to a value (in place)",
+        "param": [
+          {
+            "key": "map",
+            "type": "map",
+            "desc": "map to mutate (direct reference, zero-copy)"
+          },
+          {
+            "key": "key",
+            "type": "string",
+            "desc": "key to set"
+          },
+          {
+            "key": "value",
+            "type": "any",
+            "desc": "value to store"
+          }
+        ]
+      }
+    ],
+    "map_remove": [
+      {
+        "desc": "remove a key (in place)",
+        "param": [
+          {
+            "key": "map",
+            "type": "map",
+            "desc": "map to mutate (direct reference, zero-copy)"
+          },
+          {
+            "key": "key",
+            "type": "string",
+            "desc": "key to remove; absent = no-op"
+          }
+        ]
+      }
+    ],
+    "map_merge": [
+      {
+        "desc": "merge another map in place (later keys win)",
+        "param": [
+          {
+            "key": "map",
+            "type": "map",
+            "desc": "target map (direct reference, zero-copy)"
+          },
+          {
+            "key": "other",
+            "type": "map",
+            "desc": "source map (direct reference); self-merge is a no-op"
+          }
+        ]
+      }
+    ]
+  }
+}

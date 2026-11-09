@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="18.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\gui\main.cpp" />
+    <ClCompile Include="..\..\src\gui\gui.cpp" />
+    <ClCompile Include="..\..\src\gui\QScriptMain.cpp" />
+    <ClCompile Include="..\..\src\gui\CompilePanel.cpp" />
+    <ClCompile Include="..\..\src\gui\LangRefDock.cpp" />
+    <ClCompile Include="..\..\src\gui\OpenFilesPanel.cpp" />
+    <ClCompile Include="..\..\src\gui\WelcomePage.cpp" />
+    <ClCompile Include="..\..\src\gui\ScriptEditor.cpp" />
+    <ClCompile Include="..\..\src\gui\EditorArea.cpp" />
+    <ClCompile Include="..\..\src\gui\AsHighlighter.cpp" />
+    <ClCompile Include="..\..\src\gui\CompletionPopup.cpp" />
+    <ClCompile Include="..\..\src\gui\HintProvider.cpp" />
+    <ClCompile Include="..\..\src\gui\FileTreeDock.cpp" />
+    <ClCompile Include="..\..\src\gui\PropsPanel.cpp" />
+    <ClCompile Include="..\..\src\gui\EmbedWidget.cpp" />
+    <ClCompile Include="..\..\src\gui\UiTerminal.cpp" />
+    <ClCompile Include="..\..\src\gui\EngineObject.cpp" />
+    <ClCompile Include="..\..\src\gui\ViewDock.cpp" />
+    <ClCompile Include="..\..\src\gui\PerfChart.cpp" />
+    <ClCompile Include="..\..\src\gui\BreakpointStore.cpp" />
+    <ClCompile Include="..\..\src\gui\debug\RunnerProcess.cpp" />
+    <ClCompile Include="..\..\src\gui\debug\Session.cpp" />
+    <ClCompile Include="..\..\src\gui\debug\VariablesModel.cpp" />
+    <ClCompile Include="..\..\src\gui\debug\SessionManager.cpp" />
+    <ClCompile Include="..\..\src\gui\debug\PerfSampler.cpp" />
+    <ClCompile Include="..\..\src\proto\message.cpp" />
+    <ClCompile Include="..\..\src\gui\QScriptSetting.cpp" />
+    <ClCompile Include="..\..\src\gui\QScriptProject.cpp" />
+    <ClCompile Include="..\..\src\gui\Settings.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtUic Include="..\..\src\gui\QScriptMain.ui" />
+    <QtUic Include="..\..\src\gui\QScriptProject.ui" />
+    <QtUic Include="..\..\src\gui\QScriptSetting.ui" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtRcc Include="..\..\res\gui\AScript.qrc" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="..\..\src\gui\QScriptMain.h" />
+    <QtMoc Include="..\..\src\gui\CompilePanel.h" />
+    <QtMoc Include="..\..\src\gui\LangRefDock.h" />
+    <QtMoc Include="..\..\src\gui\OpenFilesPanel.h" />
+    <QtMoc Include="..\..\src\gui\WelcomePage.h" />
+    <QtMoc Include="..\..\src\gui\ScriptEditor.h" />
+    <QtMoc Include="..\..\src\gui\EditorArea.h" />
+    <QtMoc Include="..\..\src\gui\AsHighlighter.h" />
+    <QtMoc Include="..\..\src\gui\CompletionPopup.h" />
+    <QtMoc Include="..\..\src\gui\FileTreeDock.h" />
+    <QtMoc Include="..\..\src\gui\PropsPanel.h" />
+    <QtMoc Include="..\..\src\gui\EmbedWidget.h" />
+    <QtMoc Include="..\..\src\gui\UiTerminal.h" />
+    <QtMoc Include="..\..\src\gui\EngineObject.h" />
+    <QtMoc Include="..\..\src\gui\ViewDock.h" />
+    <QtMoc Include="..\..\src\gui\PerfChart.h" />
+    <QtMoc Include="..\..\src\gui\debug\RunnerProcess.h" />
+    <QtMoc Include="..\..\src\gui\debug\Session.h" />
+    <QtMoc Include="..\..\src\gui\debug\VariablesModel.h" />
+    <QtMoc Include="..\..\src\gui\debug\SessionManager.h" />
+    <QtMoc Include="..\..\src\gui\debug\PerfSampler.h" />
+    <QtMoc Include="..\..\src\gui\QScriptSetting.h" />
+    <QtMoc Include="..\..\src\gui\QScriptProject.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\src\gui\gui.h" />
+    <ClInclude Include="..\..\src\gui\Icons.h" />
+    <ClInclude Include="..\..\src\gui\BreakpointStore.h" />
+    <ClInclude Include="..\..\src\gui\HintProvider.h" />
+    <ClInclude Include="..\..\src\proto\message.h" />
+    <ClInclude Include="..\..\src\gui\Settings.h" />
+    <ClInclude Include="resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="AxcGui.rc" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{c3d4e5f6-7a8b-4c9d-a0e1-f2a3b4c5d6e7}</ProjectGuid>
+    <Keyword>QtVS_v304</Keyword>
+    <WindowsTargetPlatformVersion Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">10.0.26100.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">10.0.26100.0</WindowsTargetPlatformVersion>
+    <QtMsBuild Condition="'$(QtMsBuild)'=='' OR !Exists('$(QtMsBuild)\qt.targets')">$(MSBuildProjectDirectory)\QtMsBuild</QtMsBuild>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v145</PlatformToolset>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v145</PlatformToolset>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Condition="Exists('$(QtMsBuild)\qt_defaults.props')">
+    <Import Project="$(QtMsBuild)\qt_defaults.props" />
+  </ImportGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="QtSettings">
+    <QtInstall>6.8.3_msvc2022_64</QtInstall>
+    <QtModules>core;gui;widgets;svg</QtModules>
+    <QtBuildConfig>debug</QtBuildConfig>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="QtSettings">
+    <QtInstall>6.8.3_msvc2022_64</QtInstall>
+    <QtModules>core;gui;widgets;svg</QtModules>
+    <QtBuildConfig>release</QtBuildConfig>
+  </PropertyGroup>
+  <Target Name="QtMsBuildNotFound" BeforeTargets="CustomBuild;ClCompile" Condition="!Exists('$(QtMsBuild)\qt.targets') or !Exists('$(QtMsBuild)\qt.props')">
+    <Message Importance="High" Text="QtMsBuild: could not locate qt.targets, qt.props; project may not build correctly." />
+  </Target>
+  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Label="Shared" />
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(QtMsBuild)\Qt.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(QtMsBuild)\Qt.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <TargetName>axc-gui</TargetName>
+    <OutDir>$(SolutionDir)..\bin\</OutDir>
+    <IntDir>$(SolutionDir)..\build\$(ProjectName)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <TargetName>axc-gui</TargetName>
+    <OutDir>$(SolutionDir)..\bin\</OutDir>
+    <IntDir>$(SolutionDir)..\build\$(ProjectName)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <DisableSpecificWarnings>4251;4819;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\src;$(SolutionDir)..\src\gui;$(SolutionDir)..\src\core;$(SolutionDir)..\lib\alxlib\include\alxbase;$(SolutionDir)..\lib\alxlib\include\alxcore;$(SolutionDir)..\lib\alxlib\include\alxscpt;$(SolutionDir)..\lib\alxlib\include\alxcomm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>AxcCore.lib;AlxBase.lib;AlxCore.lib;AlxScpt.lib;AlxComm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(OutDir);$(SolutionDir)..\lib\alxlib\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <DisableSpecificWarnings>4251;4819;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\src;$(SolutionDir)..\src\gui;$(SolutionDir)..\src\core;$(SolutionDir)..\lib\alxlib\include\alxbase;$(SolutionDir)..\lib\alxlib\include\alxcore;$(SolutionDir)..\lib\alxlib\include\alxscpt;$(SolutionDir)..\lib\alxlib\include\alxcomm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>AxcCore.lib;AlxBase.lib;AlxCore.lib;AlxScpt.lib;AlxComm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(OutDir);$(SolutionDir)..\lib\alxlib\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
+    <ClCompile>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="Configuration">
+    <ClCompile>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\AxcCore\AxcCore.vcxproj">
+      <Project>{a1b2c3d4-e5f6-7890-abcd-ef1234567890}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">
+    <Import Project="$(QtMsBuild)\qt.targets" />
+  </ImportGroup>
+  <ImportGroup Label="ExtensionTargets" />
+</Project>

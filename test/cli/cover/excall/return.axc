@@ -1,0 +1,20 @@
+// Cover test: Extension function return value types
+// Tests: $sys_exec returns varmap, $io_fread returns string, $io_fwrite returns bool
+
+// $sys_exec returns varmap with output, excode, success
+var r = $sys_exec("echo test");
+if (type(r) != "map") throw "exec should return map";
+if (type(r["output"]) != "string") throw "output should be string";
+if (type(r["excode"]) != "int") throw "excode should be int";
+if (type(r["success"]) != "bool") throw "success should be bool";
+
+// $io_fwrite returns bool
+var ok = $io_fwrite("/tmp/alexis_excall_ret.txt", "data");
+if (type(ok) != "bool") throw "fwrite should return bool";
+
+// $io_fread returns bytes
+var content = $io_fread("/tmp/alexis_excall_ret.txt");
+if (type(content) != "bytes") throw "fread should return bytes";
+
+// Cleanup
+$sys_exec("rm -f /tmp/alexis_excall_ret.txt");

@@ -1,0 +1,14 @@
+// Cover test: Extension function argument passing
+// Tests: $io_fwrite with path and content args
+
+var path = "/tmp/alexis_excall_test.txt";
+var content = "hello from excall";
+var ok = $io_fwrite(path, content);
+if (!ok) throw "fwrite should succeed";
+
+// Read back with $io_fread (returns bytes)
+var r = $io_fread(path);
+if (r != bytes(content)) throw "fread content mismatch";
+
+// Cleanup
+$sys_exec(string("rm -f %1", path));

@@ -1,0 +1,32 @@
+// 3.7 字面量 — 所有字面量语法正确解析
+$io_print("--- test_literals ---");
+
+// 整数
+$io_print("123 = %1", 123);
+$io_print("-456 = %1", -456);
+$io_print("0xFF = %1", 0xFF);
+$io_print("0o77 = %1", 0o77);
+$io_print("0b1010 = %1", 0b1010);
+
+// 浮点
+$io_print("3.14 = %1", 3.14);
+$io_print("-2.5 = %1", -2.5);
+$io_print("1e5 = %1", 1e5);
+$io_print("1.5e-3 = %1", 1.5e-3);
+$io_print("2e-3 = %1", 2e-3);
+
+// 字符
+$io_print("char c = %1", 'c');
+$io_print("char newline = %1", '\n');
+$io_print("char x41 = %1", '\x41');
+
+// 字符串
+$io_print("str hello = %1", "hello");
+$io_print("str esc newline = %1", "esc\nend");
+
+// 布尔
+$io_print("true = %1", true);
+$io_print("false = %1", false);
+
+// 空值
+$io_print("null = %1", null);

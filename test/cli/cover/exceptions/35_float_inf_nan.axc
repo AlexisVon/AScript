@@ -1,0 +1,13 @@
+// float() inf/nan string conversion — explicit strings allowed
+var x = float("inf");
+$io_print(x == x);           // true — inf == inf
+x = float("+inf");
+$io_print(x == x);           // true
+x = float("-inf");
+$io_print(x == x);           // true
+x = float("nan");
+$io_print(x != x);           // true — nan != nan
+
+// string() roundtrip
+$io_print(string(float("inf")));  // inf
+$io_print(string(float("nan")));  // nan

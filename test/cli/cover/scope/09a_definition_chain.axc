@@ -1,0 +1,65 @@
+// 测试 9a：名字查找走定义链，不走调用栈
+// 被调函数只看到自己的声明帧 + 模块 store，永远看不到调用者的激活
+var caught; caught = false;
+def callee_read() { return caller_local; }
+def caller_read() { var caller_local; caller_local = 5; return callee_read(); }
+try { caller_read(); } catch (e) { caught = true; }
+if (caught) { $io_print("PASS: 9a callee cannot read caller local\n"); } else { $io_print("FAIL: 9a callee read caller local\n"); }
+
+caught = false;
+def callee_write() { caller_local = 99; }
+def caller_write() { var caller_local; caller_local = 5; callee_write(); return caller_local; }
+try { caller_write(); } catch (e) { caught = true; }
+if (caught) { $io_print("PASS: 9a callee cannot write caller local\n"); } else { $io_print("FAIL: 9a callee wrote caller local\n"); }
+
+// 兄弟块里的同名局部变量不影响函数解析
+var t; t = 0;
+def read_t() { return t; }
+def block_probe() { var t; t = 9; return read_t(); }
+if (read_t() == 0) { $io_print("PASS: 9a plain read\n"); } else { $io_print("FAIL: 9a plain read\n"); }
+if (block_probe() == 0) { $io_print("PASS: 9a sibling block shadow ignored\n"); } else { $io_print("FAIL: 9a sibling block shadow leaked\n"); }
+
+// 词法捕获（声明链）照常解析
+def outer_capture() {
+    var x; x = 7;
+    def inner_capture() { return x; }
+    return inner_capture();
+}
+if (outer_capture() == 7) { $io_print("PASS: 9a lexical capture kept\n"); } else { $io_print("FAIL: 9a lexical capture lost\n"); }
+
+def chain_a() {
+    var x; x = 1;
+    def chain_b() {
+        def chain_c() { return x; }
+        return chain_c();
+    }
+    return chain_b();
+}
+if (chain_a() == 1) { $io_print("PASS: 9a multi-level capture kept\n"); } else { $io_print("FAIL: 9a multi-level capture lost\n"); }
+
+// @() 走同一套查找
+def at_outer() {
+    var y; y = 4;
+    def at_inner() { return @("y"); }
+    return at_inner();
+}
+if (at_outer() == 4) { $io_print("PASS: 9a @ follows the chain\n"); } else { $io_print("FAIL: 9a @ did not follow the chain\n"); }
+
+// 归属不是可见性：捕获的名字可读，但被调方永远删不掉
+def del_outer() {
+    var z; z = 1;
+    def del_inner() { var r; r = delete z; return r ? 100 : z; }
+    return del_inner();
+}
+if (del_outer() == 1) { $io_print("PASS: 9a delete acts on the own frame only\n"); } else { $io_print("FAIL: 9a delete removed a captured name\n"); }
+
+// eval 读取它被调用处的激活 ...
+def eval_caller() { var gv; gv = 3; return eval("return gv;"); }
+if (eval_caller() == 3) { $io_print("PASS: 9a eval sees its call-site activation\n"); } else { $io_print("FAIL: 9a eval lost its call-site activation\n"); }
+
+// ... 但看不到调用者的调用者
+caught = false;
+def eval_innermost() { return eval("return gv;"); }
+def eval_outer() { var gv; gv = 3; return eval_innermost(); }
+try { eval_outer(); } catch (e) { caught = true; }
+if (caught) { $io_print("PASS: 9a eval cannot see the caller's caller\n"); } else { $io_print("FAIL: 9a eval saw the caller's caller\n"); }

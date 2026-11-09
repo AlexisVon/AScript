@@ -1,0 +1,30 @@
+{
+  "functions": {
+    "evt_after": [
+      {
+        "desc": "queue a call to a root-scope def; it runs at the script's next yield() point",
+        "param": [
+          {
+            "key": "ms",
+            "type": "int",
+            "desc": "delay in milliseconds; 0 = eligible at once (the heartbeat grants it, ~50ms quantum)"
+          },
+          {
+            "key": "name",
+            "type": "string",
+            "desc": "root-scope def name, resolved when the delivery is serviced"
+          },
+          {
+            "key": "args...",
+            "type": "any",
+            "desc": "values passed to the def; the delivery holds them until serviced"
+          }
+        ],
+        "ret": {
+          "type": "bool",
+          "desc": "true = queued, false = the yield queue is full (delivery refused)"
+        }
+      }
+    ]
+  }
+}

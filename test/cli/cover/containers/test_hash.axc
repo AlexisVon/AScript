@@ -1,0 +1,45 @@
+// Cover test: $hash_xxx hashing
+
+def check(cond, msg) {
+    if (!cond) throw msg;
+}
+
+// sha256 of known value
+var h = $hash_sha256("hello");
+check(h == "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824", "sha256 known");
+
+// sha1
+var s = $hash_sha1("hello");
+check(s == "aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d", "sha1 known");
+
+// crc32c
+var c = $hash_crc32c("hello");
+check(c != "", "crc32c non-empty");
+
+// same input -> same output
+check($hash_sha256("hello") == $hash_sha256("hello"), "sha256 deterministic");
+
+// bytes input
+var b = bytes("hello");
+check($hash_sha256(b) == h, "sha256 bytes input");
+
+// hash_file — self path via here()
+var self = here()["file"];
+var fh = $hash_file(self);
+check(fh != "", "hash_file sha256 default");
+var fh2 = $hash_file(self, "sha1");
+check(fh2 != "", "hash_file sha1");
+var fh3 = $hash_file(self, "crc32c");
+check(fh3 != "", "hash_file crc32c");
+
+// hash_file not found
+var got = false;
+try { $hash_file("/nonexistent"); } catch (e) { got = e.what == "RuntimeError"; }
+check(got, "hash_file not found -> RuntimeError");
+
+// hash_file invalid type
+got = false;
+try { $hash_file(self, "md5"); } catch (e) { got = e.what == "RuntimeError"; }
+check(got, "hash_file bad type -> RuntimeError");
+
+$io_print("= $hash_ extends OK =\n");

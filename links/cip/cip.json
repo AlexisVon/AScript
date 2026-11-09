@@ -1,0 +1,216 @@
+{
+  "functions": {
+    "open": [
+      {
+        "desc": "open a CIP client connection",
+        "param": [
+          {"key": "addr", "type": "string", "desc": "host:port, port defaults to 44818"},
+          {"key": "timeout", "type": "int", "optional": true, "default": 3000, "desc": "reply timeout in ms"}
+        ],
+        "ret": {"type": "handle", "desc": "cip connection handle; copies share it"}
+      }
+    ],
+    "listen": [
+      {
+        "desc": "serve a local point table as an EtherNet/IP device",
+        "param": [{"key": "addr", "type": "string", "desc": "bind address, port defaults to 44818"}],
+        "ret": {"type": "handle", "desc": "cip server handle; copies share it"}
+      }
+    ],
+    "define_bool": [
+      {
+        "desc": "declare a BOOL point",
+        "param": [
+          {"key": "h", "type": "handle", "desc": "connection handle"},
+          {"key": "name", "type": "string", "desc": "point name"},
+          {"key": "shape", "type": "int|vec", "optional": true, "desc": "element count, or [rows, columns]"}
+        ]
+      }
+    ],
+    "define_sint": [
+      {
+        "desc": "declare a SINT point",
+        "param": [
+          {"key": "h", "type": "handle", "desc": "connection handle"},
+          {"key": "name", "type": "string", "desc": "point name"},
+          {"key": "shape", "type": "int|vec", "optional": true, "desc": "element count, or [rows, columns]"}
+        ]
+      }
+    ],
+    "define_int": [
+      {
+        "desc": "declare an INT point",
+        "param": [
+          {"key": "h", "type": "handle", "desc": "connection handle"},
+          {"key": "name", "type": "string", "desc": "point name"},
+          {"key": "shape", "type": "int|vec", "optional": true, "desc": "element count, or [rows, columns]"}
+        ]
+      }
+    ],
+    "define_dint": [
+      {
+        "desc": "declare a DINT point",
+        "param": [
+          {"key": "h", "type": "handle", "desc": "connection handle"},
+          {"key": "name", "type": "string", "desc": "point name"},
+          {"key": "shape", "type": "int|vec", "optional": true, "desc": "element count, or [rows, columns]"}
+        ]
+      }
+    ],
+    "define_lint": [
+      {
+        "desc": "declare a LINT point",
+        "param": [
+          {"key": "h", "type": "handle", "desc": "connection handle"},
+          {"key": "name", "type": "string", "desc": "point name"},
+          {"key": "shape", "type": "int|vec", "optional": true, "desc": "element count, or [rows, columns]"}
+        ]
+      }
+    ],
+    "define_real": [
+      {
+        "desc": "declare a REAL point",
+        "param": [
+          {"key": "h", "type": "handle", "desc": "connection handle"},
+          {"key": "name", "type": "string", "desc": "point name"},
+          {"key": "shape", "type": "int|vec", "optional": true, "desc": "element count, or [rows, columns]"}
+        ]
+      }
+    ],
+    "define_lreal": [
+      {
+        "desc": "declare a LREAL point",
+        "param": [
+          {"key": "h", "type": "handle", "desc": "connection handle"},
+          {"key": "name", "type": "string", "desc": "point name"},
+          {"key": "shape", "type": "int|vec", "optional": true, "desc": "element count, or [rows, columns]"}
+        ]
+      }
+    ],
+    "define_string": [
+      {
+        "desc": "declare a STRING point (length carried by the value)",
+        "param": [
+          {"key": "h", "type": "handle", "desc": "connection handle"},
+          {"key": "name", "type": "string", "desc": "point name"}
+        ]
+      }
+    ],
+    "define_sstring": [
+      {
+        "desc": "declare an SSTRING point (length carried by the value)",
+        "param": [
+          {"key": "h", "type": "handle", "desc": "connection handle"},
+          {"key": "name", "type": "string", "desc": "point name"}
+        ]
+      }
+    ],
+    "define_byte": [
+      {
+        "desc": "declare a BYTE point; a run reads as bytes",
+        "param": [
+          {"key": "h", "type": "handle", "desc": "connection handle"},
+          {"key": "name", "type": "string", "desc": "point name"},
+          {"key": "shape", "type": "int|vec", "optional": true, "desc": "element count, or [rows, columns]"}
+        ]
+      }
+    ],
+    "remove": [
+      {
+        "desc": "drop a declaration and its seeded value",
+        "param": [
+          {"key": "h", "type": "handle", "desc": "connection handle"},
+          {"key": "name", "type": "string", "desc": "point name"}
+        ]
+      }
+    ],
+    "points": [
+      {
+        "desc": "the declared point table",
+        "param": [{"key": "h", "type": "handle", "desc": "connection handle"}],
+        "ret": {"type": "map", "desc": "{name: \"DINT\"}, {\"Tag_Array\": \"INT[10]\"}"}
+      }
+    ],
+    "get": [
+      {
+        "desc": "read one point, a range, or a whole array",
+        "param": [
+          {"key": "h", "type": "handle", "desc": "connection handle"},
+          {"key": "tag", "type": "string", "desc": "Tag, Tag[i], Tag[a,b), Tag[r][c]"}
+        ],
+        "ret": {"type": "any", "desc": "scalar, vec, bytes, or null with the reason in error()"}
+      },
+      {
+        "desc": "read a batch in the order asked",
+        "param": [
+          {"key": "h", "type": "handle", "desc": "connection handle"},
+          {"key": "tags", "type": "vec", "desc": "point names"}
+        ],
+        "ret": {"type": "vec", "desc": "values in order; a missing point is null"}
+      }
+    ],
+    "set": [
+      {
+        "desc": "write one point, a range, or a whole array",
+        "param": [
+          {"key": "h", "type": "handle", "desc": "connection handle"},
+          {"key": "tag", "type": "string", "desc": "Tag, Tag[i], Tag[a,b), Tag[r][c]"},
+          {"key": "v", "type": "any", "desc": "scalar, vec, bytes or string"}
+        ],
+        "ret": {"type": "bool", "desc": "false with the reason in error()"}
+      },
+      {
+        "desc": "write a batch; stops at the first refusal",
+        "param": [
+          {"key": "h", "type": "handle", "desc": "connection handle"},
+          {"key": "points", "type": "map", "desc": "{name: value}"}
+        ],
+        "ret": {"type": "bool", "desc": "false with the reason in error()"}
+      }
+    ],
+    "wait": [
+      {
+        "desc": "wait until a point satisfies the script's condition",
+        "param": [
+          {"key": "h", "type": "handle", "desc": "connection handle"},
+          {"key": "key", "type": "string", "desc": "point name"},
+          {"key": "cond", "type": "func|string", "desc": "script function (or its name), fed the value"},
+          {"key": "timeout", "type": "int", "desc": "deadline in ms"},
+          {"key": "period", "type": "int", "optional": true, "default": 20, "desc": "client sampling period in ms"}
+        ],
+        "ret": {"type": "bool", "desc": "false at the deadline; the last value is in error()"}
+      },
+      {
+        "desc": "wait on several points; the condition gets a vec",
+        "param": [
+          {"key": "h", "type": "handle", "desc": "connection handle"},
+          {"key": "keys", "type": "vec", "desc": "point names"},
+          {"key": "cond", "type": "func|string", "desc": "script function (or its name)"},
+          {"key": "timeout", "type": "int", "desc": "deadline in ms"},
+          {"key": "period", "type": "int", "optional": true, "default": 20, "desc": "client sampling period in ms"}
+        ],
+        "ret": {"type": "bool", "desc": "false at the deadline; the last value is in error()"}
+      }
+    ],
+    "error": [
+      {
+        "desc": "why the last get/set/wait failed",
+        "param": [{"key": "h", "type": "handle", "desc": "connection handle"}],
+        "ret": {"type": "string", "desc": "empty after an operation that went through"}
+      }
+    ],
+    "close": [
+      {
+        "desc": "close the transport; the handle object stays until released",
+        "param": [{"key": "h", "type": "handle", "desc": "connection handle"}]
+      }
+    ],
+    "alive": [
+      {
+        "desc": "whether the transport is still open",
+        "param": [{"key": "h", "type": "handle", "desc": "connection handle"}],
+        "ret": {"type": "bool", "desc": "true when connected or listening"}
+      }
+    ]
+  }
+}

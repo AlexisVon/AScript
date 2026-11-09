@@ -1,0 +1,120 @@
+// T10: eval — 字符串函数(立即执行的匿名 lambda)
+// 三级动态性: 数据 → 名字(@) → 代码(eval)
+
+// 1. 末值返回
+var r = eval("1+1;");
+$io_print("T10.1 last-value:", r);
+if (r != 2) { $io_print("FAIL T10.1"); throw("assert"); }
+$io_print("OK");
+
+// 2. 显式 return 短路
+r = eval("return 42;");
+$io_print("T10.2 return:", r);
+if (r != 42) { $io_print("FAIL T10.2"); throw("assert"); }
+$io_print("OK");
+
+// 3. 语句序列 + 末值
+r = eval("var t = 10; t * 2;");
+$io_print("T10.3 stmts:", r);
+if (r != 20) { $io_print("FAIL T10.3"); throw("assert"); }
+$io_print("OK");
+
+// 4. params 摊煎饼(map 键即名)
+r = eval("a + b;", map{"a": 1, "b": 2});
+$io_print("T10.4 params:", r);
+if (r != 3) { $io_print("FAIL T10.4"); throw("assert"); }
+$io_print("OK");
+
+// 5. params 遮蔽外层同名
+var a = 100;
+r = eval("a;", map{"a": 1});
+$io_print("T10.5 shadow:", r);
+if (r != 1) { $io_print("FAIL T10.5"); throw("assert"); }
+$io_print("OK");
+
+// 6. 帧链闭包: eval 读当前帧局部
+var x = 10;
+r = eval("x + 1;");
+$io_print("T10.6 closure read:", r);
+if (r != 11) { $io_print("FAIL T10.6"); throw("assert"); }
+$io_print("OK");
+
+// 7. 帧链写透: eval 写外层同名变量
+r = eval("x = 99; x;");
+$io_print("T10.7 write-through:", r, "x=", x);
+if (r != 99 || x != 99) { $io_print("FAIL T10.7"); throw("assert"); }
+$io_print("OK");
+
+// 8. eval 内 def: 帧内有效,帧外即弃
+r = eval("def g(a) { return a * 2; } return g(21);");
+$io_print("T10.8 def inside:", r);
+if (r != 42) { $io_print("FAIL T10.8"); throw("assert"); }
+$io_print("OK");
+var def_died = false;
+try { @("g")(1); } catch (e) { def_died = true; }
+$io_print("T10.8b def dies with frame:", def_died);
+if (!def_died) { $io_print("FAIL T10.8b"); throw("assert"); }
+$io_print("OK");
+
+// 9. 多层 eval —— 脚本编辑字符串求值,求值中再次编辑新的求值字符串
+var s = "1+1;";
+r = eval("return eval(s) * 2;");
+$io_print("T10.9 nested:", r);
+if (r != 4) { $io_print("FAIL T10.9"); throw("assert"); }
+$io_print("OK");
+
+// 10. 多层生成: 数据拼代码 → eval → 代码内再拼代码 → 再 eval
+var gen = "var t = \"3*3;\"; return eval(t) + 1;";
+r = eval(gen);
+$io_print("T10.10 gen chain:", r);
+if (r != 10) { $io_print("FAIL T10.10"); throw("assert"); }
+$io_print("OK");
+
+// 11. 三层 eval 递归反射
+var l1 = "var l2 = \"return eval(\\\"2+2;\\\") + 1;\"; return eval(l2);";
+r = eval(l1);
+$io_print("T10.11 3-layer:", r);
+if (r != 5) { $io_print("FAIL T10.11"); throw("assert"); }
+$io_print("OK");
+
+// 12. eval 与 @ 组合: 生成代码用 @ 动态分发
+var fname = "double";
+def double(v) { return v * 2; }
+r = eval("return @(fname)(21);");
+$io_print("T10.12 eval+@:", r);
+if (r != 42) { $io_print("FAIL T10.12"); throw("assert"); }
+$io_print("OK");
+
+// 13. eval 内具名 def 的 TCO 递归
+r = eval("def g(n) { if (n <= 0) return 0; return g(n - 1); } return g(100);");
+$io_print("T10.13 TCO inside:", r);
+if (r != 0) { $io_print("FAIL T10.13"); throw("assert"); }
+$io_print("OK");
+
+// 14. TypeError: 非字符串
+var type_err = false;
+try { eval(123); } catch (e) { type_err = true; }
+$io_print("T10.14 type error:", type_err);
+if (!type_err) { $io_print("FAIL T10.14"); throw("assert"); }
+$io_print("OK");
+
+// 15. ParseError 可捕获
+var parse_err = false;
+try { eval("if("); } catch (e) { parse_err = true; }
+$io_print("T10.15 parse error caught:", parse_err);
+if (!parse_err) { $io_print("FAIL T10.15"); throw("assert"); }
+$io_print("OK");
+
+// 16. 空串 → null
+r = eval("");
+$io_print("T10.16 empty:", r == null);
+if (r != null) { $io_print("FAIL T10.16"); throw("assert"); }
+$io_print("OK");
+
+// 17. here() 在 eval 串内返回串内位置
+var h = eval("here();");
+$io_print("T10.17 here in eval: row=", h.row, " col=", h.col, " file=", h.file);
+if (h.row < 1 || h.col < 1) { $io_print("FAIL T10.17"); throw("assert"); }
+$io_print("OK");
+
+$io_print("T10 all passed");

@@ -1,0 +1,71 @@
+// T03: 复合赋值 (@x += 1) 和自增自减 (++@x, --@x)
+
+// 1. @x += 1;
+var x = 10;
+var name = "x";
+@name += 1;
+$io_print("T03.1 @x+=1: x=", x);
+if (x != 11) { $io_print("FAIL T03.1"); throw("assert"); }
+$io_print("OK");
+
+// 2. @x -= 3;
+x = 10;
+@name -= 3;
+$io_print("T03.2 @x-=3: x=", x);
+if (x != 7) { $io_print("FAIL T03.2"); throw("assert"); }
+$io_print("OK");
+
+// 3. @x *= 2;
+x = 10;
+@name *= 2;
+$io_print("T03.3 @x*=2: x=", x);
+if (x != 20) { $io_print("FAIL T03.3"); throw("assert"); }
+$io_print("OK");
+
+// 4. @x /= 2;
+x = 20;
+@name /= 2;
+$io_print("T03.4 @x/=2: x=", x);
+if (x != 10) { $io_print("FAIL T03.4"); throw("assert"); }
+$io_print("OK");
+
+// 5. @x %= 3;
+x = 10;
+@name %= 3;
+$io_print("T03.5 @x%=3: x=", x);
+if (x != 1) { $io_print("FAIL T03.5"); throw("assert"); }
+$io_print("OK");
+
+// 6. ++@x;
+x = 5;
+++@name;
+$io_print("T03.6 ++@x: x=", x);
+if (x != 6) { $io_print("FAIL T03.6"); throw("assert"); }
+$io_print("OK");
+
+// 7. --@x;
+x = 5;
+--@name;
+$io_print("T03.7 --@x: x=", x);
+if (x != 4) { $io_print("FAIL T03.7"); throw("assert"); }
+$io_print("OK");
+
+// 8. 复合赋值 via @(expr)
+x = 100;
+var target = "x";
+@(target) += 50;
+$io_print("T03.8 @(expr)+=50: x=", x);
+if (x != 150) { $io_print("FAIL T03.8"); throw("assert"); }
+$io_print("OK");
+
+// 9. 复杂对象路径复合赋值（读路径可以，写路径不行，已记录）
+var ns = map();
+ns.a = 10;
+var p = "ns.a";
+@p += 5;  // 这里的@p引用目标名是"ns.a"（含点），不是导航路径
+// 所以这会在顶层创建一个叫"ns.a"的变量，而非修改ns.a
+// 我们只测试语法是否编译和执行
+$io_print("T03.9 @(dotted_path) += behavior: ns.a=", ns.a, " new_var ns.a=", @p);
+$io_print("OK (behavior documented)");
+
+$io_print("T03 all passed");

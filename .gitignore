@@ -1,0 +1,47 @@
+# Build directories
+build/
+bin/
+
+# MSVC build artifacts
+.vs/
+msvc/*/x64/
+*.aps
+*.vcxproj.user
+
+# AlxLib binaries (not tracked)
+lib/alxlib/bin/
+lib/alxlib/lib/
+lib/alxlib/debug/
+lib/alxlib/*.tar.gz
+lib/alxlib/*.zip
+
+# OpenCV package (not tracked; lib/opencv/README.md is the declaration)
+lib/opencv/*
+!lib/opencv/README.md
+
+# Test build artifacts
+test/cli/link/*.so
+test/cli/link/*.d
+test/cli/link/base/*.d
+
+# IDE / cache
+.cache/
+.vscode/settings.json
+__pycache__/
+
+# Compiled files
+*.o
+*.d
+*.so
+*.a
+*.debug
+*.pdb
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Internal plan/todo/issue docs (never tracked)
+doc/**/*plan*
+doc/**/*todo*
+doc/**/*issue*

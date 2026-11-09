@@ -1,0 +1,9 @@
+// Test 7c: string element is its byte value (int 0-255), read and write alike
+var s; s = "hello";
+if (s[0] == 'h') { $io_print("PASS: 7c string[0] read -> 104\n"); } else { $io_print("FAIL\n"); }
+if (s[1] == 'e') { $io_print("PASS: 7c string[1] read -> 101\n"); } else { $io_print("FAIL\n"); }
+s[0] = 'H';
+if (s[0] == 'H') { $io_print("PASS: 7c string index write (int byte)\n"); } else { $io_print("FAIL\n"); }
+var caught; caught = false;
+try { s[0] = "x"; } catch (e) { caught = true; }
+if (caught) { $io_print("PASS: 7c string index write with a string throws\n"); } else { $io_print("FAIL: no error\n"); }
