@@ -176,8 +176,8 @@ if(BUILD_CLI)
     else()
         target_link_libraries(axc-cli PRIVATE axc-core)
         set_target_properties(axc-cli PROPERTIES
-            BUILD_RPATH "$ORIGIN;$ORIGIN/alexis"
-            INSTALL_RPATH "$ORIGIN;$ORIGIN/alexis"
+            BUILD_RPATH "$ORIGIN;$ORIGIN/alxlib"
+            INSTALL_RPATH "$ORIGIN;$ORIGIN/alxlib"
         )
     endif()
 endif()
